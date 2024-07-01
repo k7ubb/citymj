@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="canvaslib.js"></script>
 <title>市町村麻雀</title>
 <style>
 html, body {
@@ -15,10 +16,9 @@ html, body {
 }
 #game {
 	margin: 0 auto;
-	width: 100%;
-	height: 100%;
 	position: relative;
-	max-width: 1000px;
+	max-height: 100%;
+	aspect-ratio: 16 / 9;
 }
 </style>
 </head>
@@ -26,7 +26,6 @@ html, body {
 <body>
 <div id="game"></div>
 <script src="data.js"></script>
-<script src="draw.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
