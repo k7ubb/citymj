@@ -10,10 +10,11 @@ onload = function() {
 			ctx.fillStyle = "#f00";
 			ctx.fillRect(this.x, this.y, this.width, this.height);
 		},
-		drawonevent: function(ctx) {
-			ctx.strokeStyle = "#ff0";
-			ctx.fillRect(this.x - 10, this.y - 10, this.width + 20, this.height + 20);
-
+		drawonevent: function(ctx, width, height, x, y) {
+			if (this.x <= x && x <= this.x + this.width && this.y <= y && y < this.y + this.height) {
+				ctx.strokeStyle = "#0f0";
+				ctx.strokeRect(this.x - 10, this.y - 10, this.width + 20, this.height + 20);
+			}
 		}
 	});
 
