@@ -81,6 +81,30 @@ class Canvas {
 				);
 			}
 		}
+	}
 
+	x(x) {
+		return x;
+	}
+
+	y(y) {
+		return y;
+	}
+
+	#ctx(ctx) {
+		return {
+			fillRect: (x, y, w, h) => {
+				console.log(x);
+				ctx.fillRect(this.x(x), this.y(y), this.x(w), this.y(h));
+			}
+		};
+	}
+
+	get ctx_f() {
+		return this.#ctx(this.#canvas_f.getContext("2d"));
+	}
+
+	get ctx_b() {
+		return this.#ctx(this.#canvas_b.getContext("2d"));
 	}
 }
