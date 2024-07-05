@@ -1,14 +1,16 @@
 onload = function() {
 	const draw = new Canvas(document.getElementById("game"));
-	
+	draw.x = (x) => { return x * draw.width / 16 };
+	draw.y = (y) => { return y * draw.height / 9 };
+
 	draw.objects.push({
-		x: 100,
-		y: 100,
-		width: 200,
-		height: 200,
+		x: 1,
+		y: 1,
+		width: 2,
+		height: 2,
 		draw: function(ctx) {
 			ctx.fillStyle = "#f00";
-			ctx.fillRect(this.x, this.y, this.width, this.height);
+			draw.ctx_b.fillRect(this.x, this.y, this.width, this.height);
 		},
 		drawonevent: function(ctx, width, height, x, y) {
 			if (this.x <= x && x <= this.x + this.width && this.y <= y && y < this.y + this.height) {
