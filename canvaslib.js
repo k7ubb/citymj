@@ -1,3 +1,5 @@
+"use strict";
+
 class Canvas {
 	#div;
 	#canvas_b;
@@ -6,9 +8,11 @@ class Canvas {
 	#width;
 	#height;
 	
+	get width() { return this.#width; }
+	get height() { return this.#height; }
+
 	constructor(div) {
-		this.#div = div;
-		
+		this.#div = div;		
 		this.#canvas_b = document.createElement("canvas");
 		this.#canvas_f = document.createElement("canvas");
 		this.#canvas_b.style.cssText = this.#canvas_f.style.cssText = `
@@ -23,12 +27,10 @@ class Canvas {
 		
 		addEventListener("resize", function() {
 			this.#resize();
-			this.#draw();
+			this.#execOnupdate();
 		}.bind(this));
 		
-		this.#div.addEventListener("mousemove", function(event) {
-			this.#drawonevent(event);
-		}.bind(this));
+		this.#initEvent();
 	};
 	
 	#resize() {
@@ -40,25 +42,26 @@ class Canvas {
 		this.#canvas_b.style.height = this.#canvas_f.style.height = this.#div.clientHeight + "px";
 	};
 	
-	#update = () => {};
+	#onupdate = () => {};
 	#onevent = () => {};
 	
-	set update(f) {
-		this.#update = f;
-		this.#draw();
+	set onupdate(f) {
+		this.#onupdate = f;
+		this.#execOnupdate();
 	};
 	
 	set onevent(f) {
 		this.#onevent = f;
 	}
-	
+
+	update = () => this.#execOnupdate();
+
 	objects = [];
 	
-	#draw() {
-		const ctx = this.#canvas_b.getContext("2d");
-		ctx.fillStyle = "#fff";
-		ctx.fillRect(0, 0, this.#width, this.#height);
-		this.#update(ctx, this.#width, this.#height);
+	#execOnupdate() {
+		const ctx = this.#ctx(this.#canvas_b.getContext("2d"), this);
+		ctx.clear();
+		this.#onupdate(ctx);
 		for (let o of this.objects) {
 			if (o.draw) {
 				o.draw(ctx);
@@ -66,45 +69,139 @@ class Canvas {
 		}
 	};
 
-	#drawonevent (event) {
-		const offset = event.target.getBoundingClientRect();
-		const ctx = this.#canvas_f.getContext("2d");
-		ctx.clearRect(0, 0, this.#width, this.#height);
+	#execOnevent (x, y) {
+		const ctx = this.#ctx(this.#canvas_f.getContext("2d"), this);
+		ctx.clear();
+		this.#onevent(ctx, x, y);
 		for (let o of this.objects) {
-			if (o.drawonevent) {
-				o.drawonevent(
-					this.#canvas_f.getContext("2d"),
-					this.#width,
-					this.#height,
-					(event.clientX - offset.left) * devicePixelRatio,
-					(event.clientY - offset.top) * devicePixelRatio
-				);
+			if (ctx.isPointInPath(o.path, x, y)) {
+				if (this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
+				if (o.drawonhover) { o.drawonhover(ctx);} 
 			}
 		}
 	}
 
-	x(x) {
-		return x;
+	#onclick = () => {};
+
+	set onclick(f) {
+		this.#onclick = f;
 	}
 
-	y(y) {
-		return y;
+	#execOnclick (x, y) {
+		const ctx = this.#ctx(this.#canvas_f.getContext("2d"), this);
+		this.#onclick(x, y);
+		for (let o of this.objects) {
+			if (ctx.isPointInPath(o.path, x, y) && this.onclick) {
+				o.onclick();
+			}
+		}
 	}
 
-	#ctx(ctx) {
+
+	// 座標変換: ユーザ側で定義
+	x(x) { return x; }
+	y(y) { return y; }
+	invX(x) { return x; }
+	invY(y) { return y; }
+
+	#ctx(ctx, draw) {
 		return {
-			fillRect: (x, y, w, h) => {
-				console.log(x);
-				ctx.fillRect(this.x(x), this.y(y), this.x(w), this.y(h));
+			context: ctx,
+			clear: function() {
+				ctx.clearRect(0, 0, draw.width, draw.height);
+			},
+			path: (path) => {
+				ctx.beginPath();
+				ctx.moveTo(draw.x(path[0][0]), draw.y(path[0][1]));
+				for (let i=1; i<path.length; i++) {
+					ctx.lineTo(draw.x(path[i][0]), draw.y(path[i][1]));
+				}
+			},
+			fill: function(path, color) {
+				this.path(path);
+				ctx.fillStyle = color;
+				ctx.fill();
+			},
+			stroke: function(path, color) {
+				this.path(path);
+				ctx.strokeStyle = color;
+				ctx.stroke();
+			},
+			isPointInPath: function (path, x, y){
+				this.path(path);
+				return ctx.isPointInPath(draw.x(x), draw.y(y));
+			},
+			drawText: function(text, x, y, color="#000", size=1, font="sans-serif", align="left", valign="top") {
+				ctx.font = `${draw.x(size)}px ${font}`;
+				ctx.fillStyle = color;
+				ctx.textAlign = align;
+				ctx.textBaseline = valign;
+				ctx.fillText(text, draw.x(x), draw.y(y));
 			}
 		};
 	}
 
-	get ctx_f() {
-		return this.#ctx(this.#canvas_f.getContext("2d"));
-	}
+	#mouse_x_ = -1;
+	#mouse_y_ = -1;
+	#mouse_start_x_ = -1;
+	#mouse_start_y_ = -1;
+	#mouse_click = false;
 
-	get ctx_b() {
-		return this.#ctx(this.#canvas_b.getContext("2d"));
+	get isClick() { return this.#mouse_click; }
+	
+	#dragStart(clientX_, clientY_, offset) {
+		this.#mouse_start_x_ = this.#mouse_x_ = (this.#mouse_x_ = clientX_ - offset.left) * devicePixelRatio;
+		this.#mouse_start_y_ = this.#mouse_y_ = (this.#mouse_y_ = clientY_ - offset.top) * devicePixelRatio;
+		this.#mouse_click = true;
+		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_));
+	};
+
+	#dragContinue(clientX_, clientY_, offset) {
+		this.#mouse_x_ = (clientX_ - offset.left) * devicePixelRatio;
+		this.#mouse_y_ = (clientY_ - offset.top) * devicePixelRatio;
+		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_));
+	};
+
+	#dragEnd(clientX_, clientY_, offset) {
+		this.#mouse_x_ = (clientX_ - offset.left) * devicePixelRatio;
+		this.#mouse_y_ = (clientY_ - offset.top) * devicePixelRatio;
+		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_));
+		if (this.#mouse_click) {
+			this.#execOnclick(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_));
+			this.#mouse_click = false;
+		}
+		this.#mouse_start_x_ = this.#mouse_x_ = -1;
+		this.#mouse_start_y_ = this.#mouse_y_ = -1;
+	};
+
+	// イベント処理
+	#initEvent() {
+		this.#div.addEventListener("mousedown", function(event) {
+			this.#dragStart(event.clientX, event.clientY, event.target.getBoundingClientRect());
+		}.bind(this));
+
+		this.#div.addEventListener("touchstart", function(event) {
+			this.#dragStart(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
+		}.bind(this));
+		
+		this.#div.addEventListener("mousemove", function(event) {
+			this.#dragContinue(event.clientX, event.clientY, event.target.getBoundingClientRect())
+		}.bind(this));
+		
+		this.#div.addEventListener("touchmove", function(event) {
+			this.#dragContinue(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
+		}.bind(this));
+		
+		this.#div.addEventListener("mouseup", function(event) {
+			this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
+		}.bind(this));
+		
+		this.#div.addEventListener("mouseleave", function(event) {
+			this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
+		}.bind(this));
+		
+		this.#div.addEventListener("touchend", function(event) {
+			this.#dragEnd(event.changedTouches[0].clientX, event.changedTouches[0].clientY, event.target.getBoundingClientRect());
+		}.bind(this));
 	}
 }

@@ -1,37 +1,44 @@
 onload = function() {
 	const draw = new Canvas(document.getElementById("game"));
-	draw.x = (x) => { return x * draw.width / 16 };
-	draw.y = (y) => { return y * draw.height / 9 };
+	draw.x = (x) => x * draw.width / 16;
+	draw.y = (y) => y * draw.height / 9;
 
+	draw.invX = (x) => x * 16 / draw.width;
+	draw.invY = (y) => y * 9 / draw.height;
+
+	let count = 0;
 	draw.objects.push({
-		x: 1,
-		y: 1,
-		width: 2,
-		height: 2,
+		path: [ [1,1], [1,3], [3,3], [3,1] ],
 		draw: function(ctx) {
-			ctx.fillStyle = "#f00";
-			draw.ctx_b.fillRect(this.x, this.y, this.width, this.height);
+			ctx.fill(this.path, "#ff0");
 		},
-		drawonevent: function(ctx, width, height, x, y) {
-			if (this.x <= x && x <= this.x + this.width && this.y <= y && y < this.y + this.height) {
-				ctx.strokeStyle = "#0f0";
-				ctx.strokeRect(this.x - 10, this.y - 10, this.width + 20, this.height + 20);
-			}
+		drawonhover: function(ctx) {
+			ctx.fill(this.path, "rgba(255, 255, 255, .5)");
+		},
+		drawonclicking: function(ctx) {
+			ctx.fill(this.path, "rgba(255, 255, 255)");
+		},
+		onclick: function() {
+			console.log(1);
 		}
 	});
 
-	draw.update = (ctx, width, height) => {		
-		ctx.fillStyle = "#eee";
-		ctx.beginPath();
-		ctx.arc(width/2, height/2, Math.min(width/2, height/2) - 10, 0, 2 * Math.PI);
-		ctx.closePath();
-		ctx.fill();
-		
+	draw.update();
+
+	const rect = [ [5,5], [5,8], [8,8], [6,5] ];
+
+	draw.onupdate = (ctx) => {
+		ctx.fill(rect, "#eee");
 	};
 	
-	draw.anime = (ctx, width, height, x, y) => {
-		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = "#0f0";
-		ctx.fillRect(x - 20, y - 20, 40, 40);
+	draw.onevent = (ctx, x, y) => {
+		if (draw.isClick) {
+			ctx.fill([ [x-.5, y-.5], [x-.5, y+.5], [x+.5, y+.5], [x+.5, y-.5] ], "#f0c");
+			ctx.drawText(count, x-.5, y-.5, "#000", 1);
+		}
+	};
+
+	draw.onclick = (x, y) => {
+		count++;
 	};
 };
