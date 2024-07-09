@@ -75,7 +75,7 @@ class Canvas {
 		ctx.clear();
 		this.#onevent(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
-			if (ctx.isPointInPath(o.path, x, y)) {
+			if (o.path && (o.drawonclicking || o.drawonhover) && ctx.isPointInPath(o.path, x, y)) {
 				if (this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
 				if (o.drawonhover) { o.drawonhover(ctx);} 
 			}
@@ -99,7 +99,7 @@ class Canvas {
 		ctx.clear();
 		this.#onclick(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
-			if (ctx.isPointInPath(o.path, x, y) && o.onclick) {
+			if (o.path && o.onclick && ctx.isPointInPath(o.path, x, y)) {
 				o.onclick();
 			}
 		}
@@ -111,7 +111,7 @@ class Canvas {
 		ctx.clear();
 		this.#onmouseup(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
-			if (ctx.isPointInPath(o.path, x, y) && o.onmouseup) {
+			if (o.path && o.onmouseup && ctx.isPointInPath(o.path, x, y)) {
 				o.onmouseup();
 			}
 		}
@@ -126,10 +126,6 @@ class Canvas {
 
 	get pixel() { return this.invX(1); }
 
-	rect(x, y, w, h=w) {
-		return [ [x, y], [x, y+h], [x+w, y+h], [x+w, y] ];
-	}
-
 	#ctx(ctx, draw) {
 		return {
 			context: ctx,
@@ -138,21 +134,34 @@ class Canvas {
 			clear: function() {
 				ctx.clearRect(0, 0, draw.width, draw.height);
 			},
-			path: (path) => {
+			// r: pathが長方形で, 左上 左下 右下 右上 の順になっていることが前提
+			path: (path, r) => {
 				ctx.beginPath();
-				ctx.moveTo(draw.x(path[0][0]), draw.y(path[0][1]));
-				for (let i=1; i<path.length; i++) {
-					ctx.lineTo(draw.x(path[i][0]), draw.y(path[i][1]));
+				if (r) {
+					ctx.moveTo(draw.x(path[0][0] + r), draw.y(path[0][1]));
+					ctx.arc(draw.x(path[0][0] + r), draw.y(path[0][1] + r), draw.x(r), Math.PI * 1.5, Math.PI, true);
+					ctx.lineTo(draw.x(path[1][0]), draw.y(path[1][1] - r));
+					ctx.arc(draw.x(path[1][0] + r), draw.y(path[1][1] - r), draw.x(r), Math.PI, Math.PI * .5, true);
+					ctx.lineTo(draw.x(path[2][0] - r), draw.y(path[2][1]));
+					ctx.arc(draw.x(path[2][0] - r), draw.y(path[2][1] - r), draw.x(r), Math.PI * .5, 0, true);
+					ctx.lineTo(draw.x(path[3][0]), draw.y(path[3][1] + r));
+					ctx.arc(draw.x(path[3][0] - r), draw.y(path[3][1] + r), draw.x(r), 0, Math.PI * 1.5, true);
+				}
+				else {
+					ctx.moveTo(draw.x(path[0][0]), draw.y(path[0][1]));
+					for (let i=1; i<path.length; i++) {
+						ctx.lineTo(draw.x(path[i][0]), draw.y(path[i][1]));
+					}
 				}
 				ctx.closePath();
 			},
-			fill: function(path, color) {
-				this.path(path);
+			fill: function(path, color, radius) {
+				this.path(path, radius);
 				ctx.fillStyle = color;
 				ctx.fill();
 			},
-			stroke: function(path, color, {width=this.pixel} = {}) {
-				this.path(path);
+			stroke: function(path, color, {width=this.pixel, radius=0} = {}) {
+				this.path(path, radius);
 				ctx.lineWidth = draw.x(width);
 				ctx.strokeStyle = color;
 				ctx.stroke();
@@ -161,8 +170,8 @@ class Canvas {
 				this.path(path);
 				return ctx.isPointInPath(draw.x(x), draw.y(y));
 			},
-			drawText: function(text, x, y, {color="#000", size=1, font="sans-serif", align="left", valign="top"} = {}) {
-				ctx.font = `${draw.x(size)}px ${font}`;
+			drawText: function(text, x, y, {color="#000", size=1, font="sans-serif", style="", align="left", valign="top"} = {}) {
+				ctx.font = `${style} ${draw.x(size)}px ${font}`;
 				ctx.fillStyle = color;
 				ctx.textAlign = align;
 				ctx.textBaseline = valign;
