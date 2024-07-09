@@ -10,11 +10,11 @@ addEventListener("load", () => {
 });
 
 const drawGrid = (ctx) => {
-	for (let i=1; i<16; i++) {
-		ctx.fill(ctx.rect(i, 0, ctx.pixel, 9), "#ccc");
+	for (let i = 1; i < 16; i++) {
+		ctx.fill(xy2rect(i, 0, ctx.pixel, 9), "#ccc");
 	}
-	for (let i=1; i<9; i++) {
-		ctx.fill(ctx.rect(0, i, 16, ctx.pixel), "#ccc");
+	for (let i = 1; i < 9; i++) {
+		ctx.fill(xy2rect(0, i, 16, ctx.pixel), "#ccc");
 	}
 };
 
