@@ -2,8 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
-<script src="canvaslib.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="bbcanvas.js"></script>
 <title>市町村麻雀</title>
 <style>
 html, body {
@@ -21,15 +22,22 @@ html, body {
 	aspect-ratio: 16 / 9;
 	background: #fff;
 }
+canvas {
+	user-select: none; 
+  -webkit-user-select: none; 
+  -moz-user-select: none; 
+	-webkit-touch-callout: none;
+}
 </style>
 </head>
 
 <body>
 <div id="game"></div>
-<script src="data/game.js"></script>
-<script src="data/rect.js"></script>
-<script src="scene/start.js"></script>
-<script src="scene/game.js"></script>
-<script src="main.js"></script>
+<script src="src/menu.js"></script>
+<script src="src/game_data.js"></script>
+<script src="src/game_system.js"></script>
+<script src="src/game_draw.js"></script>
+<script src="src/game.js"></script>
+<script src="src/main.js"></script>
 </body>
 </html>
