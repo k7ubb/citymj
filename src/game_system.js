@@ -13,10 +13,15 @@ class GameTiles {
   latestTsumo;
   reached = false;
   reachCount;
+  finished = false;
 
   cutHand(i, isReach) {
     if (this.reached && this.latestTsumo !== this.hand[i]) {
-      throw new Error("リーチしているので、ツモ切りしかできません。");
+      return;
+    }
+    if (!this.hand[i]) {
+      console.error("ijou")
+      return;
     }
     if (isReach) {
       this.reached = true;
@@ -29,7 +34,10 @@ class GameTiles {
   };
 
   tsumo() {
-    if (this.trash.length === 18) { throw new Error("終局"); }
+    if (this.trash.length === 3) {
+      this.finished = true;
+      return;
+    }
     this.hand[this.hand.length - 1] = this.latestTsumo = this.mountain.shift();
     this.updateGroup();
   };

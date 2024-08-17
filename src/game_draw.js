@@ -178,12 +178,12 @@ const drawKanButton = (canvas, ctx, drawObject, isHover) => {
 	ctx.drawText("カン", x + w / 2, y + .05, {size: .4, align: "center"});
 };
 
-const drawReachButton = (canvas, ctx, flags) => {
+const drawReachButton = (canvas, ctx, isToReach) => {
 	const [x, y, w, h] = [12.5, 5.2, 2.5, .8];
 	ctx.fill(canvas.makePath({rect: [x, y, w, h], radius: .4}), "#ccc")
 	ctx.drawText("リーチ", 14, 5.6, {size: .5, align: "center", valign: "middle"});
 	ctx.stroke(canvas.makePath({rect: [x + .3, y + .2, h - .4, h - .4]}), "#000", {width: canvas.pixel * 2});
-	if (flags.reach) {
+	if (isToReach()) {
 		ctx.stroke(canvas.makePath({points: [
 			[x + .4, y + .3],
 			[x + .5, y + .55],
