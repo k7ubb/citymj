@@ -61,13 +61,22 @@ class BBCanvas {
 	update = () => this.#execOnupdate();
 
 	objects = [];
+
+	#eval (arg) {
+		if (typeof arg === "function") {
+			return arg();
+		}
+		else {
+			return arg;
+		}
+	};
 	
 	#execOnupdate() {
 		const ctx = this.#ctx(this.#canvas_b.getContext("2d"));
 		ctx.clear();
 		this.#onupdate(ctx);
 		for (let o of this.objects) {
-			if (o.draw) {
+			if (!this.#eval(o.disabled) && o.draw) {
 				o.draw(ctx);
 			}
 		}
@@ -81,8 +90,8 @@ class BBCanvas {
 		this.#onevent(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
 			if ((o.drawonclicking || o.drawonhover) && o.path && ctx.isPointInPath(o.path, x, y)) {
-				if (this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
-				if (o.drawonhover) { o.drawonhover(ctx);} 
+				if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
+				if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.drawonhover) { o.drawonhover(ctx);} 
 			}
 		}
 	};
@@ -104,7 +113,7 @@ class BBCanvas {
 		ctx.clear();
 		this.#onclick(ctx, x, y, startx, starty, time);
 		for (let o of this.objects) {
-			if (o.onclick && o.path && ctx.isPointInPath(o.path, x, y)) {
+			if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.onclick && o.path && ctx.isPointInPath(o.path, x, y)) {
 				o.onclick(ctx, x, y, startx, starty, time);
 			}
 		}
@@ -116,7 +125,7 @@ class BBCanvas {
 		ctx.clear();
 		this.#onmouseup(ctx, x, y, startx, starty, time);
 		for (let o of this.objects) {
-			if (o.onmouseup && ctx.isPointInPath(o, x, y)) {
+			if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.onmouseup && ctx.isPointInPath(o, x, y)) {
 				o.onmouseup(ctx, x, y, startx, starty, time);
 			}
 		}

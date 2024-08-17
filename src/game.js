@@ -1,62 +1,45 @@
-const gameScene = (canvas, initialHandLength = 14, showHandGuide = true) => {
-	const tiles = new GameTiles(initialHandLength);
-	let drawObjects;
+const gameScene = (canvas, config = {initialHandLength: 14, showHandGuide: true}) => {
+	const tiles = new GameTiles(config.initialHandLength);
+	const objects = {};
+	let isToReach = false;
 
-	let config = {
-		initialHandLength,
-		showHandGuide
-	}
-	let flags = {
-		reach: false,
-	};
-
-	const updatedrawObjects = () => {
-		drawObjects = {};
-		drawObjects.hand = calcHandRect(canvas, tiles, 0).map((rect, i) => ({
+	const updateObjects = () => {
+		objects.hand = calcHandRect(canvas, tiles, 0).map((rect, i) => ({
+			eventDisabled: () => tiles.finished,
 			path: canvas.makePath({ rect, radius: rect[2] * .05 }),
 			draw: function(ctx) { drawTile(canvas, ctx, rect, tiles.hand[i], "up"); },
 			drawonhover: function(ctx) { ctx.fill(this.path, "rgba(0 0 0 / .1)"); },
 			onclick: async function(ctx, x, y, startx, starty, time) {
 				if (time > 1000) { return; }
-				try {
-					if (flags.reach) {
-						tiles.cutHand(i, true);
-						updatedrawObjects();
-						canvas.update();
-						flags.reach = false;
-					}
-					else {
-						tiles.cutHand(i);
-					};
+				canvas.eventDisabled = true;
+				tiles.cutHand(i, isToReach);
+				if (isToReach) {
+					updateObjects();
 					canvas.update();
-					canvas.eventDisabled = true;
-					await sleep(300);
-					try {
-						tiles.tsumo();
-						canvas.update();
-						canvas.eventDisabled = false;
-					} catch(e) {
-						alert("終局");
-					}
-				} catch(e) {
-
+					isToReach = false;
 				}
+				canvas.update();
+				await sleep(300);
+				tiles.tsumo();
+				canvas.update();
+				await sleep(100);
+				canvas.eventDisabled = false;
 			}
 		}));
-		drawObjects.uradora = calcDoraRect(canvas, true).map((rect, i) => ({
+		objects.uradora = calcDoraRect(canvas, true).map((rect, i) => ({
 			path: canvas.makePath({ rect, radius: rect[2] * .05 }),
 			draw: function(ctx) { drawTile(canvas, ctx, rect, tiles.uradora[i].tile, "ura"); },
 		}));
-		drawObjects.dora = calcDoraRect(canvas).map((rect, i) => ({
+		objects.dora = calcDoraRect(canvas).map((rect, i) => ({
 			path: canvas.makePath({ rect, radius: rect[2] * .05 }),
 			draw: function(ctx) { drawTile(canvas, ctx, rect, tiles.dora[i].tile, i < tiles.doraCount? "down" : "ura"); },
 			drawonhover: function(ctx) { if (i < tiles.doraCount) drawDora(canvas, ctx, tiles.dora[i].char); },
 		}));
-		drawObjects.trash = calcTrashRect(canvas, tiles).map((rect, i) => ({
+		objects.trash = calcTrashRect(canvas, tiles).map((rect, i) => ({
 			path: canvas.makePath({ rect, radius: rect[2] * .05 }),
 			draw: function(ctx) { drawTile(canvas, ctx, rect, tiles.trash[i], "down"); },
 		}));
-		drawObjects.kans = calcKansRect(canvas).map((rects, i) => ({
+		objects.kans = calcKansRect(canvas).map((rects, i) => ({
 			draw: function(ctx) {
 				if (tiles.kans[i]) {
 					for (let j = 0; j < 4; j++) {
@@ -65,57 +48,57 @@ const gameScene = (canvas, initialHandLength = 14, showHandGuide = true) => {
 				}
 			}
 		}));
-		drawObjects.kanButton = new Array(3).fill().map((_, i) => ({
+		objects.kanButton = new Array(3).fill().map((_, i) => ({
+			disabled: () => tiles.finished,
 			draw: function(ctx) { if (this.path) drawKanButton(canvas, ctx, this); },
 			drawonhover: function(ctx) { if (this.path) drawKanButton(canvas, ctx, this, true); },
 			onclick: async function() {
 				tiles.kan(i);
-				updatedrawObjects();
+				updateObjects();
 				canvas.update();
 				canvas.eventDisabled = true;
 				await sleep(300);
-				try {
-					tiles.tsumo();
-					canvas.update();
-					canvas.eventDisabled = false;
-				} catch(e) {
-					alert("終局");
-				}
+				tiles.tsumo();
+				canvas.update();
+				canvas.eventDisabled = false;
 			}
 		}));
-		if (!tiles.reached) {
-			drawObjects.reachButton = {
-				title: "reachbutton",
-				path: canvas.makePath({rect: [12.5, 5.2, 2.5, .8], radius: .4}),
-				draw: function(ctx) { drawReachButton(canvas, ctx, flags); },
-				onclick: function() {
-					flags.reach = !flags.reach;
-					canvas.update();
-				},
-				drawonhover: function(ctx) { ctx.fill(this.path, "rgba(0 0 0 / .1)"); },
-			};
-		}
+		objects.reachButton = {
+			disabled: () => tiles.reached || tiles.finished,
+			path: canvas.makePath({rect: [12.5, 5.2, 2.5, .8], radius: .4}),
+			draw: function(ctx) { drawReachButton(canvas, ctx, () => isToReach); },
+			onclick: function() {
+				isToReach = !isToReach;
+				canvas.update();
+			},
+			drawonhover: function(ctx) { ctx.fill(this.path, "rgba(0 0 0 / .1)"); },
+		};
+		objects.continueButton = {
+			disabled: () => !tiles.finished,
+			draw: function(ctx) { ctx.drawText("終了", 1, 1); },
+		};
+
 		canvas.objects = [];
-		for (let obj in drawObjects) {
-			if (Array.isArray(drawObjects[obj])) {
-				canvas.objects.push(...drawObjects[obj]);
+		for (let obj in objects) {
+			if (Array.isArray(objects[obj])) {
+				canvas.objects.push(...objects[obj]);
 			}
 			else {
-				canvas.objects.push(drawObjects[obj]);
+				canvas.objects.push(objects[obj]);
 			}
 		}
 	};
-	updatedrawObjects();
+	updateObjects();
 
 	canvas.onupdate = (ctx) => {
 		ctx.fill(canvas.makePath({rect: [0, 0, 16, 9]}), "#88f");
 		drawGrid(canvas, ctx);
 		drawCityGroup(canvas, ctx, tiles);
-		updateKanDialogRect(canvas, tiles, drawObjects.kanButton);
+		updateKanDialogRect(canvas, tiles, objects.kanButton);
 	};
 
 	canvas.onupdateFinally = (ctx) => {
-		if (flags.reach) {
+		if (isToReach) {
 			ctx.fill(canvas.makePath({rect: [3.1, 3, 9.8, 2]}), "#f00");
 			ctx.fill(canvas.makePath({rect: [3.2, 3.1, 9.6, 1.8]}), "#fff");
 			ctx.drawText("テンパイしてなくてもリーチできますが、", 3.4, 3.3, {size: .5})
