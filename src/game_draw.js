@@ -26,20 +26,21 @@ const calcDoraRect = (canvas, isUradora) => {
 };
 
 const calcTrashRect = (canvas, tiles) => {
+	const TILE_COL = 9;
 	const TILE_W = .8;
-	const start_x = (16 - TILE_W * 6) / 2;
+	const start_x = (16 - TILE_COL * TILE_W) / 2;
 	const rect = [];
 	let isReached;
-	for (let i = 0; i < 18; i++) {
-		if (i % 6 === 0) {
+	for (let i = 0; i < tiles.trash.length; i++) {
+		if (i % TILE_COL === 0) {
 			isReached = false;
 		}
 		if (tiles.reached && i === tiles.reachCount) {
 			isReached = true;
-			rect.push([start_x + TILE_W * (i % 6), 1 + (TILE_W * 4 / 3 + canvas.pixel) * Math.floor(i / 6) + TILE_W / 6, TILE_W * 4 / 3 - canvas.pixel, TILE_W]);
+			rect.push([start_x + TILE_W * (i % TILE_COL), 1 + (TILE_W * 4 / 3 + canvas.pixel) * Math.floor(i / TILE_COL) + TILE_W / 6, TILE_W * 4 / 3 - canvas.pixel, TILE_W]);
 		}
 		else {
-			rect.push([start_x + TILE_W * (i % 6) + (isReached? TILE_W / 3 : 0), 1 + (TILE_W * 4 / 3 + canvas.pixel)* Math.floor(i / 6), TILE_W - canvas.pixel, TILE_W * 4 / 3]);
+			rect.push([start_x + TILE_W * (i % TILE_COL) + (isReached? TILE_W / 3 : 0), 1 + (TILE_W * 4 / 3 + canvas.pixel)* Math.floor(i / TILE_COL), TILE_W - canvas.pixel, TILE_W * 4 / 3]);
 		}
 	}
 	return rect;
