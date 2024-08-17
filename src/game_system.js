@@ -1,10 +1,13 @@
 // https://camp.trainocate.co.jp/magazine/howto-javascript-sleep/
 const sleep = t => new Promise( resolve => setTimeout(resolve, t) );
 
+const MAX_COUNT = 36;
+
 class GameTiles {
   mountain;
   dora;
   uradora;
+  count = 0;
   doraCount = 1;
   hand;
   trash;
@@ -19,23 +22,20 @@ class GameTiles {
     if (this.reached && this.latestTsumo !== this.hand[i]) {
       return;
     }
-    if (!this.hand[i]) {
-      console.error("ijou")
-      return;
-    }
     if (isReach) {
       this.reached = true;
       this.reachCount = this.trash.length;
     }
-    this.trash.push(this.hand[i]);
+    this.trash[this.count++] = this.hand[i];
     this.hand.splice(i, 1);
     this.hand.push(null);
     this.updateGroup();
   };
 
   tsumo() {
-    if (this.trash.length === 3) {
+    if (this.count === MAX_COUNT) {
       this.finished = true;
+      console.log(this.mountain.length)
       return;
     }
     this.hand[this.hand.length - 1] = this.latestTsumo = this.mountain.shift();
@@ -87,7 +87,7 @@ class GameTiles {
     this.hand = new Array(initialHandLength).fill().map(() => this.mountain.shift());
     this.dora = new Array(5).fill().map(() => this.newDora());
     this.uradora = new Array(5).fill().map(() => this.newDora());
-    this.trash = [];
+    this.trash = new Array(MAX_COUNT).fill();
     this.updateGroup();
   };
 
