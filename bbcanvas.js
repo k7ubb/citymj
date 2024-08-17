@@ -1,6 +1,6 @@
 "use strict";
 
-class Canvas {
+class BBCanvas {
 	#div;
 	#canvas_b;
 	#canvas_f;
@@ -43,23 +43,27 @@ class Canvas {
 	};
 	
 	#onupdate = () => {};
+	#onupdateFinally = () => {};
 	#onevent = () => {};
 	
 	set onupdate(f) {
 		this.#onupdate = f;
-		this.#execOnupdate();
+	};
+
+	set onupdateFinally(f) {
+		this.#onupdateFinally = f;
 	};
 	
 	set onevent(f) {
 		this.#onevent = f;
-	}
+	};
 
 	update = () => this.#execOnupdate();
 
 	objects = [];
 	
 	#execOnupdate() {
-		const ctx = this.#ctx(this.#canvas_b.getContext("2d"), this);
+		const ctx = this.#ctx(this.#canvas_b.getContext("2d"));
 		ctx.clear();
 		this.#onupdate(ctx);
 		for (let o of this.objects) {
@@ -67,20 +71,21 @@ class Canvas {
 				o.draw(ctx);
 			}
 		}
+		this.#onupdateFinally(ctx);
 	};
 
 	#execOnevent (x, y, startx, starty) {
 		if (this.eventDisabled) { return; }
-		const ctx = this.#ctx(this.#canvas_f.getContext("2d"), this);
+		const ctx = this.#ctx(this.#canvas_f.getContext("2d"));
 		ctx.clear();
 		this.#onevent(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
-			if (o.path && (o.drawonclicking || o.drawonhover) && ctx.isPointInPath(o.path, x, y)) {
+			if ((o.drawonclicking || o.drawonhover) && o.path && ctx.isPointInPath(o.path, x, y)) {
 				if (this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
 				if (o.drawonhover) { o.drawonhover(ctx);} 
 			}
 		}
-	}
+	};
 
 	#onclick = () => {};
 	#onmouseup = () => {};
@@ -93,26 +98,26 @@ class Canvas {
 		this.#onmouseup = f;
 	}
 
-	#execOnclick (x, y, startx, starty) {
+	#execOnclick (x, y, startx, starty, time) {
 		if (this.eventDisabled) { return; }
-		const ctx = this.#ctx(this.#canvas_f.getContext("2d"), this);
+		const ctx = this.#ctx(this.#canvas_f.getContext("2d"));
 		ctx.clear();
-		this.#onclick(ctx, x, y, startx, starty);
+		this.#onclick(ctx, x, y, startx, starty, time);
 		for (let o of this.objects) {
-			if (o.path && o.onclick && ctx.isPointInPath(o.path, x, y)) {
-				o.onclick();
+			if (o.onclick && o.path && ctx.isPointInPath(o.path, x, y)) {
+				o.onclick(ctx, x, y, startx, starty, time);
 			}
 		}
 	}
 
-	#execOnmouseup (x, y, startx, starty) {
+	#execOnmouseup (x, y, startx, starty, time) {
 		if (this.eventDisabled) { return; }
-		const ctx = this.#ctx(this.#canvas_f.getContext("2d"), this);
+		const ctx = this.#ctx(this.#canvas_f.getContext("2d"));
 		ctx.clear();
-		this.#onmouseup(ctx, x, y, startx, starty);
+		this.#onmouseup(ctx, x, y, startx, starty, time);
 		for (let o of this.objects) {
-			if (o.path && o.onmouseup && ctx.isPointInPath(o.path, x, y)) {
-				o.onmouseup();
+			if (o.onmouseup && ctx.isPointInPath(o, x, y)) {
+				o.onmouseup(ctx, x, y, startx, starty, time);
 			}
 		}
 	}
@@ -126,56 +131,79 @@ class Canvas {
 
 	get pixel() { return this.invX(1); }
 
-	#ctx(ctx, draw) {
-		return {
-			context: ctx,
-			pixel: draw.pixel,
-			rect: draw.rect,
-			clear: function() {
-				ctx.clearRect(0, 0, draw.width, draw.height);
-			},
-			// r: pathが長方形で, 左上 左下 右下 右上 の順になっていることが前提
-			path: (path, r) => {
+	makePath (arg) {
+		const points = arg.points || [
+			[arg.rect[0], arg.rect[1]],															// x, y
+			[arg.rect[0], arg.rect[1] + arg.rect[3]],								// x, y + h
+			[arg.rect[0] + arg.rect[2], arg.rect[1] + arg.rect[3]],	// x + w, y + h
+			[arg.rect[0] + arg.rect[2], arg.rect[1]]								// x + w, y
+		];
+		if (arg.radius) {
+			return (ctx) => {
 				ctx.beginPath();
-				if (r) {
-					ctx.moveTo(draw.x(path[0][0] + r), draw.y(path[0][1]));
-					ctx.arc(draw.x(path[0][0] + r), draw.y(path[0][1] + r), draw.x(r), Math.PI * 1.5, Math.PI, true);
-					ctx.lineTo(draw.x(path[1][0]), draw.y(path[1][1] - r));
-					ctx.arc(draw.x(path[1][0] + r), draw.y(path[1][1] - r), draw.x(r), Math.PI, Math.PI * .5, true);
-					ctx.lineTo(draw.x(path[2][0] - r), draw.y(path[2][1]));
-					ctx.arc(draw.x(path[2][0] - r), draw.y(path[2][1] - r), draw.x(r), Math.PI * .5, 0, true);
-					ctx.lineTo(draw.x(path[3][0]), draw.y(path[3][1] + r));
-					ctx.arc(draw.x(path[3][0] - r), draw.y(path[3][1] + r), draw.x(r), 0, Math.PI * 1.5, true);
-				}
-				else {
-					ctx.moveTo(draw.x(path[0][0]), draw.y(path[0][1]));
-					for (let i=1; i<path.length; i++) {
-						ctx.lineTo(draw.x(path[i][0]), draw.y(path[i][1]));
-					}
+				ctx.moveTo(this.x(points[0][0] + arg.radius), this.y(points[0][1]));
+				ctx.arc(this.x(points[0][0] + arg.radius), this.y(points[0][1] + arg.radius), this.x(arg.radius), Math.PI * 1.5, Math.PI, true);
+				ctx.lineTo(this.x(points[1][0]), this.y(points[1][1] - arg.radius));
+				ctx.arc(this.x(points[1][0] + arg.radius), this.y(points[1][1] - arg.radius), this.x(arg.radius), Math.PI, Math.PI * .5, true);
+				ctx.lineTo(this.x(points[2][0] - arg.radius), this.y(points[2][1]));
+				ctx.arc(this.x(points[2][0] - arg.radius), this.y(points[2][1] - arg.radius), this.x(arg.radius), Math.PI * .5, 0, true);
+				ctx.lineTo(this.x(points[3][0]), this.y(points[3][1] + arg.radius));
+				ctx.arc(this.x(points[3][0] - arg.radius), this.y(points[3][1] + arg.radius), this.x(arg.radius), 0, Math.PI * 1.5, true);
+				ctx.closePath();
+			};
+		}
+		else {
+			return (ctx) => {
+				ctx.beginPath();
+				ctx.moveTo(this.x(points[0][0]), this.y(points[0][1]));
+				for (let i = 1; i < points.length; i++) {
+					ctx.lineTo(this.x(points[i][0]), this.y(points[i][1]));
 				}
 				ctx.closePath();
+			};
+		}
+	}
+
+	#ctx(ctx) {
+		const draw = this;
+		return {
+			context: ctx,
+			pixel: this.pixel,
+			clear: () => {
+				ctx.clearRect(0, 0, this.width, this.height);
 			},
-			fill: function(path, color, radius) {
-				this.path(path, radius);
+			fill: function(path, color) {
+				path(ctx);
 				ctx.fillStyle = color;
 				ctx.fill();
 			},
-			stroke: function(path, color, {width=this.pixel, radius=0} = {}) {
-				this.path(path, radius);
+			stroke: function(path, color, {width=this.pixel} = {}) {
+				path(ctx);
 				ctx.lineWidth = draw.x(width);
 				ctx.strokeStyle = color;
 				ctx.stroke();
 			},
-			isPointInPath: function (path, x, y){
-				this.path(path);
+			isPointInPath: function(path, x, y){
+				path(ctx);
 				return ctx.isPointInPath(draw.x(x), draw.y(y));
 			},
-			drawText: function(text, x, y, {color="#000", size=1, font="sans-serif", style="", align="left", valign="top"} = {}) {
+			drawText: function(text, x, y, {color="#000", size=1, font="sans-serif", style="", align="left", valign="top", rotate} = {}) {
 				ctx.font = `${style} ${draw.x(size)}px ${font}`;
 				ctx.fillStyle = color;
 				ctx.textAlign = align;
 				ctx.textBaseline = valign;
-				ctx.fillText(text, draw.x(x), draw.y(y));
+				if (rotate) {
+					ctx.rotate(rotate);
+					ctx.fillText(
+						text,
+						Math.cos(rotate) * draw.x(x) + Math.sin(rotate) * draw.y(y),
+						-Math.sin(rotate) * draw.x(x) + Math.cos(rotate) * draw.y(y),
+					);
+					ctx.rotate(-rotate);
+				}
+				else {
+					ctx.fillText(text, draw.x(x), draw.y(y));
+				}
 			}
 		};
 	}
@@ -188,6 +216,7 @@ class Canvas {
 	#mouse_start_x_ = -1;
 	#mouse_start_y_ = -1;
 	#mouse_click = false;
+	#mouse_start_time;
 
 	get isClick() { return this.#mouse_click; }
 	
@@ -195,6 +224,7 @@ class Canvas {
 		this.#mouse_start_x_ = this.#mouse_x_ = (this.#mouse_x_ = clientX_ - offset.left) * devicePixelRatio;
 		this.#mouse_start_y_ = this.#mouse_y_ = (this.#mouse_y_ = clientY_ - offset.top) * devicePixelRatio;
 		this.#mouse_click = true;
+		this.#mouse_start_time = new Date().getTime();
 		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
 	};
 
@@ -208,14 +238,15 @@ class Canvas {
 		this.#mouse_x_ = (clientX_ - offset.left) * devicePixelRatio;
 		this.#mouse_y_ = (clientY_ - offset.top) * devicePixelRatio;
 		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
-		const diff = (this.#mouse_x_ - this.#mouse_start_x_)**2 + (this.#mouse_y_ - this.#mouse_start_y_)**2
+		const diff = (this.#mouse_x_ - this.#mouse_start_x_)**2 + (this.#mouse_y_ - this.#mouse_start_y_)**2;
+		const time = new Date().getTime() - this.#mouse_start_time;
 		if (this.#mouse_click) {
 			this.#mouse_click = false;
 			if (diff < 16) {
-				this.#execOnclick(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
+				this.#execOnclick(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_), time);
 			}
 			else {
-				this.#execOnmouseup(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
+				this.#execOnmouseup(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_), time);
 			}
 		}
 		this.#mouse_start_x_ = this.#mouse_x_ = -1;
