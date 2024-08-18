@@ -150,7 +150,7 @@ const drawDraggingArrow = (canvas, ctx, rect) => {
 
 const drawCityGroup = (canvas, ctx, tiles) => {
 	const handRect = calcHandRect(canvas, tiles);
-	const count = Array(tiles.hand.length).fill(0);
+	const count = Array(tiles.hand.length).fill().map(() => []);
 	let lastPos;
 	let lastCities;
 	for (let city of tiles.group) {
@@ -160,15 +160,16 @@ const drawCityGroup = (canvas, ctx, tiles) => {
 		}
 		if (lastCities.includes(city.name)) { continue; }
 		else { lastCities.push(city.name); }
-		const pos = Math.max(...count.slice(city.position, city.position + city.length));
+		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
+		let line = 0; while(set.includes(line)) { line++; }
 		ctx.fill(canvas.makePath({rect: [
 			handRect[city.position][0] + .1,
-			handRect[city.position][1] + handRect[city.position][3] + .1 + pos * .1,
+			handRect[city.position][1] + handRect[city.position][3] + .1 + line * .1,
 			handRect[city.position][2] * city.length - .2,
 			.05
 		], radius: .025}), "#f00");
 		for (let i = 0; i < city.length; i++) {
-			count[city.position + i]++;
+			count[city.position + i].push(line);
 		}
 	}
 };
