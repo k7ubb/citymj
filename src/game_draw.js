@@ -1,62 +1,95 @@
-const HAND_TILE_W = 1;
+const HAND_W = 1;
+const HAND_Y = 7;
 
+const DORA_W = .6;
+const DORA_X = .8;
+const DORA_Y = .5;
+
+const SELECT_BUTTON_RECT = [12.5, 4.2, 2.5, .8];
+const REACH_BUTTON_RECT = [12.5, 5.2, 2.5, .8];
+
+// isDrag: true -> 理牌判定用の領域を計算
 const calcHandRect = (canvas, tiles, isDrag) => {
-	const start_x = (16 - HAND_TILE_W * tiles.hand.length - .8 * tiles.kans.length * 4) / 2;
+	const start_x = (16 - HAND_W * tiles.hand.length - .8 * tiles.kans.length * 4) / 2;
 	const rect = [];
 	if (isDrag) {
 		for (let i = 0; i < tiles.hand.length + 1; i++) {
-			rect.push([start_x + HAND_TILE_W * (i - .5), 7, HAND_TILE_W - canvas.pixel, HAND_TILE_W * 4 / 3]);
+			rect.push([start_x + HAND_W * (i - .5), HAND_Y, HAND_W - canvas.pixel, HAND_W * 4 / 3]);
 		}
 	}
 	else {
 		for (let i = 0; i < tiles.hand.length; i++) {
-			rect.push([start_x + HAND_TILE_W * i, 7, HAND_TILE_W - canvas.pixel, HAND_TILE_W * 4 / 3]);
+			rect.push([start_x + HAND_W * i, HAND_Y, HAND_W - canvas.pixel, HAND_W * 4 / 3]);
 		}
 	}
 	return rect;
 };
 
 const calcDoraRect = (canvas, isUradora) => {
-	const TILE_W = .6;
 	const rect = [];
 	for (let i = 0; i < 5; i++) {
-		rect.push([1 + TILE_W * i, 1 + (isUradora? TILE_W * .3 : 0), TILE_W - canvas.pixel, TILE_W * 4 / 3]);
+		rect.push([DORA_X + DORA_W * i, DORA_Y + (isUradora? DORA_W * .3 : 0), DORA_W - canvas.pixel, DORA_W * 4 / 3]);
 	}
 	return rect;
 };
 
 const calcTrashRect = (canvas, tiles) => {
-	const TILE_COL = 9;
-	const TILE_W = .8;
-	const start_x = (16 - TILE_COL * TILE_W) / 2;
+	const TRASH_LEN = 9;
+	const TRASH_W = .8;
+	const TRASH_Y = .5;
+	const start_x = (16 - TRASH_LEN * TRASH_W) / 2;
 	const rect = [];
 	let isReached;
 	for (let i = 0; i < tiles.trash.length; i++) {
-		if (i % TILE_COL === 0) {
+		if (i % TRASH_LEN === 0) {
 			isReached = false;
 		}
 		if (tiles.reached && i === tiles.reachCount) {
 			isReached = true;
-			rect.push([start_x + TILE_W * (i % TILE_COL), 1 + (TILE_W * 4 / 3 + canvas.pixel) * Math.floor(i / TILE_COL) + TILE_W / 6, TILE_W * 4 / 3 - canvas.pixel, TILE_W]);
+			rect.push([start_x + TRASH_W * (i % TRASH_LEN), TRASH_Y + (TRASH_W * 4 / 3 + canvas.pixel) * Math.floor(i / TRASH_LEN) + TRASH_W / 6, TRASH_W * 4 / 3 - canvas.pixel, TRASH_W]);
 		}
 		else {
-			rect.push([start_x + TILE_W * (i % TILE_COL) + (isReached? TILE_W / 3 : 0), 1 + (TILE_W * 4 / 3 + canvas.pixel)* Math.floor(i / TILE_COL), TILE_W - canvas.pixel, TILE_W * 4 / 3]);
+			rect.push([start_x + TRASH_W * (i % TRASH_LEN) + (isReached? TRASH_W / 3 : 0), TRASH_Y + (TRASH_W * 4 / 3 + canvas.pixel)* Math.floor(i / TRASH_LEN), TRASH_W - canvas.pixel, TRASH_W * 4 / 3]);
 		}
 	}
 	return rect;
 };
 
 const calcKansRect = (canvas) => {
-	const TILE_W = .8;
+	const KAN_W = .8;
 	const rects = [];
 	for (let i = 0; i < 4; i++) {
 		rects[i] = [];
-		const start_x = 16 - TILE_W * 4 * (i + 1) - .1 * i;
+		const start_x = 16 - KAN_W * 4 * (i + 1) - KAN_W / 10 * i;
 		for (let j = 0; j < 4; j++) {
-			rects[i].push([start_x + TILE_W * j, 9 - TILE_W * 4 / 3, TILE_W - canvas.pixel, TILE_W * 4 / 3]);
+			rects[i].push([start_x + KAN_W * j, 9 - KAN_W * 4 / 3, KAN_W - canvas.pixel, KAN_W * 4 / 3]);
 		}
 	}
 	return rects;
+};
+
+const drawDora = (canvas, ctx, tiles) => {
+	const doras = [];
+	for (let i = 0; i < tiles.kans.length + 1; i++) {
+		if (tiles.dora[i].char) { doras.push(tiles.dora[i].char); }
+	}
+	const max_width = doras.reduce((a, b) => Math.max(a, b.length), 0);
+	if (doras.length) {
+		ctx.stroke(canvas.makePath({rect: [DORA_X, DORA_Y + DORA_W * 2.2, DORA_W * (max_width + .4), DORA_W * (4 / 3 * doras.length + 1)]}), COLOR_STRONG, {width: canvas.pixel * 2});
+		ctx.drawText("ドラ", DORA_X + DORA_W / 6, DORA_Y + DORA_W * (2.2 + 1/6), {size: DORA_W / 2, color: COLOR_STRONG, style: "bold"})
+		for (let i = 0; i < doras.length; i++) {
+			for (let j = 0; j < doras[i].length; j++) {
+				const tile = { ...TILES.filter(x => x.character === doras[i][j])[0], red: false };
+				const rect = [DORA_X + DORA_W / 6 + DORA_W * j, DORA_Y + DORA_W * (2.2 + 5/6) + DORA_W * 4 / 3 * i, DORA_W, DORA_W * 4 / 3];
+				drawTile(canvas, ctx, rect, tile);
+			}
+		}
+	}
+	else {
+		ctx.stroke(canvas.makePath({rect: [DORA_X, DORA_Y + DORA_W * 2.2, DORA_W * 2.4, DORA_W * 2]}), COLOR_STRONG, {width: canvas.pixel * 2});
+		ctx.drawText("ドラ", DORA_X + DORA_W / 6, DORA_Y + DORA_W * (2.2 + 1/6), {size: DORA_W / 2, color: COLOR_STRONG, style: "bold"})
+		ctx.drawText("なし", DORA_X + DORA_W / 6, DORA_Y + DORA_W * (2.2 + 5/6), {size: DORA_W, color: COLOR_STRONG});
+	}
 };
 
 const updateKanDialogRect = (canvas, tiles, dialogs) => {
@@ -67,7 +100,7 @@ const updateKanDialogRect = (canvas, tiles, dialogs) => {
 	let count = 0;
 	for (let city of tiles.group) {
 		if (city.length === 4) {
-			const rect = [handRect[city.position][0], 6.2, HAND_TILE_W * 4, .5];
+			const rect = [handRect[city.position][0], HAND_Y - .8, HAND_W * 4, .5];
 			dialogs[count].rect = rect;
 			dialogs[count].path = canvas.makePath({rect});
 			count++;
@@ -75,31 +108,28 @@ const updateKanDialogRect = (canvas, tiles, dialogs) => {
 	}
 };
 
+const drawonhover = (ctx, path) => ctx.fill(path, "rgba(0 0 0 / .1)");
+
 const drawTile = (canvas, ctx, rect, tile, perspective) => {
 	if (!tile) { return; }
-	const TILE_BACK = "#00f";
 	const [x, y, w, h] = rect;
 	const size = Math.min(w, h);
 	if (perspective === "up") {
-		ctx.fill(canvas.makePath({rect: [x, y - size * .3, w, h], radius: w * .05}), TILE_BACK);
+		ctx.fill(canvas.makePath({rect: [x, y - size * .3, w, h], radius: w * .05}), COLOR_MAIN);
 		ctx.fill(canvas.makePath({rect: [x, y - size * .2, w, h]}), "#fff");
 		ctx.stroke(canvas.makePath({rect: [x, y - size * .3, w, h], radius: w * .05}), "#000");
 	}
 	if (perspective === "down") {
-		ctx.fill(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), TILE_BACK);
-		ctx.fill(canvas.makePath({rect: [x, y + size * .2, w, h]}), "#eee");
+		ctx.fill(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), COLOR_MAIN);
+		ctx.fill(canvas.makePath({rect: [x, y + size * .2, w, h]}), "#fff");
 		ctx.stroke(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), "#000");
 	}
 	if (perspective === "ura") {
-		ctx.fill(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), "#eee");
-		ctx.fill(canvas.makePath({rect: [x, y + size * .1, w, h]}), "#00f");
+		ctx.fill(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), "#fff");
+		ctx.fill(canvas.makePath({rect: [x, y + size * .1, w, h]}), COLOR_MAIN);
 		ctx.stroke(canvas.makePath({rect: [x, y + size * .3, w, h], radius: w * .05}), "#000");
-	}
-	ctx.fill(canvas.makePath({ rect, radius: rect[2] * .05 }), 
-		perspective === "up" ? "#eee" :
-		perspective === "ura" ? TILE_BACK : 
-		"#fff"
-	);
+	};
+	ctx.fill(canvas.makePath({ rect, radius: rect[2] * .05 }), perspective === "ura" ? COLOR_MAIN : "#fff");
 	ctx.stroke(canvas.makePath({ rect, radius: rect[2] * .05 }), "#000");
 	if (perspective !== "ura") {
 		if (w < h) {
@@ -110,26 +140,6 @@ const drawTile = (canvas, ctx, rect, tile, perspective) => {
 			ctx.drawText(tile.count, x + + size * .2, y + size / 2, {size: size * .3, color: "#88f", font: "serif", align: "center", valign: "middle", rotate: -Math.PI / 2});
 			ctx.drawText(tile.character, x + size * .8, y + size / 2, {size: size * .8, font: "serif", align: "center", valign: "middle", rotate: -Math.PI / 2, ...(tile.red && { color: "#f00"})})
 		}
-	}
-};
-
-const drawDora = (canvas, ctx, char) => {
-	const DORA_X = 1.1;
-	const DORA_Y = 2.4;
-	const DORA_TILE_W = .4;
-	if (char) {
-		ctx.fill(canvas.makePath({rect: [DORA_X - .1, DORA_Y - .1, DORA_TILE_W * char.length + .2, DORA_TILE_W * 4 / 3 + .45]}), "#33f");
-		ctx.drawText("ドラ", DORA_X, DORA_Y, {size: .2})
-		for (let i = 0; i < char.length; i++) {
-			const tile = { ...TILES.filter(x => x.character === char[i])[0], red: false };
-			const rect = [DORA_X + DORA_TILE_W * i, DORA_Y + .25, DORA_TILE_W, DORA_TILE_W * 4 / 3];
-			drawTile(canvas, ctx, rect, tile);
-		}
-	}
-	else {
-		ctx.fill(canvas.makePath({rect: [DORA_X - .1, DORA_Y - .1, 1, .85]}), "#33f");
-		ctx.drawText("ドラ", DORA_X, DORA_Y, {size: .2})
-		ctx.drawText("なし", DORA_X, DORA_Y + .25, {size: .4});
 	}
 };
 
@@ -148,7 +158,26 @@ const drawDraggingArrow = (canvas, ctx, rect) => {
 	);
 };
 
-const drawCityGroup = (canvas, ctx, tiles) => {
+const drawCheckbox = (canvas, ctx, x, y, isChecked) => {
+	ctx.stroke(canvas.makePath({rect: [x, y, .4, .4]}), "#000", {width: canvas.pixel * 2});
+	if (isChecked) {
+		ctx.stroke(canvas.makePath({points: [
+			[x + .1, y + .1],
+			[x + .2, y + .35],
+			[x + .4, y],
+			[x + .2, y + .35],
+			[x + .1, y + .1],
+		]}), "#f00", {width: canvas.pixel * 4});
+	}
+}
+
+const drawKanButton = (canvas, ctx, drawObject, isHover) => {
+	const [x, y, w, h] = drawObject.rect;
+	ctx.fill(canvas.makePath({ rect: [x, y + .15, w, h - .3], radius: .1}), isHover? "#999" : "#ccc");
+	ctx.drawText("カン", x + w / 2, y + .05, {size: .4, align: "center"});
+};
+
+const drawHandGuide = (canvas, ctx, tiles) => {
 	const handRect = calcHandRect(canvas, tiles);
 	const count = Array(tiles.hand.length).fill().map(() => []);
 	let lastPos;
@@ -174,24 +203,27 @@ const drawCityGroup = (canvas, ctx, tiles) => {
 	}
 };
 
-const drawKanButton = (canvas, ctx, drawObject, isHover) => {
-	const [x, y, w, h] = drawObject.rect;
-	ctx.fill(canvas.makePath({ rect: [x, y + .15, w, h - .3], radius: .1}), isHover? "#999" : "#ccc");
-	ctx.drawText("カン", x + w / 2, y + .05, {size: .4, align: "center"});
+const drawCityTable = (canvas, ctx, character) => {
+	const RECT_Y = .25;
+	const TEXT_SIZE = .39;
+	const TEXT_LINES = 11;
+	const ROW_WIDTH = 5.5;	// 一列が何文字分か: 市町村名を含む
+	const start_x = (16 - TEXT_SIZE * ROW_WIDTH * Math.ceil(61 / TEXT_LINES)) / 2;
+  const cities = CITIES.filter(city => city.name.includes(character));
+	ctx.fill(canvas.makePath({rect: [start_x - .15, RECT_Y - .15, 16 - start_x * 2 + .3, TEXT_SIZE * 1.5 * TEXT_LINES + .1]}), COLOR_STRONG);
+	ctx.fill(canvas.makePath({rect: [start_x - .1, RECT_Y - .1, 16 - start_x * 2 + .2, TEXT_SIZE * 1.5 * TEXT_LINES]}), "#fff");
+	for (let i = 0; i < cities.length; i++) {
+		ctx.drawText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE});
+	}
 };
 
-const drawReachButton = (canvas, ctx, isToReach) => {
-	const [x, y, w, h] = [12.5, 5.2, 2.5, .8];
-	ctx.fill(canvas.makePath({rect: [x, y, w, h], radius: .4}), "#ccc")
-	ctx.drawText("リーチ", 14, 5.6, {size: .5, align: "center", valign: "middle"});
-	ctx.stroke(canvas.makePath({rect: [x + .3, y + .2, h - .4, h - .4]}), "#000", {width: canvas.pixel * 2});
-	if (isToReach()) {
-		ctx.stroke(canvas.makePath({points: [
-			[x + .4, y + .3],
-			[x + .5, y + .55],
-			[x + .7, y + .2],
-			[x + .5, y + .55],
-			[x + .4, y + .3],
-		]}), "#f00", {width: canvas.pixel * 4});
+const drawCityTableIfNeed = (canvas, ctx, tiles, x, y, startx, starty) => {
+	const handRect = calcHandRect(canvas, tiles);
+	if (!IS_SMARTPHONE && canvas.isClick) { return; }
+	for (let i = 0; i < handRect.length; i++) {
+		if (ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), x, y)){
+			if (canvas.isClick && !ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), startx, starty)){ return; }
+			drawCityTable(canvas, ctx, tiles.hand[i].character);
+		}
 	}
 };

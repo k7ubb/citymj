@@ -89,7 +89,7 @@ class BBCanvas {
 		ctx.clear();
 		this.#onevent(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
-			if ((o.drawonclicking || o.drawonhover) && o.path && ctx.isPointInPath(o.path, x, y)) {
+			if (o.path && ctx.isPointInPath(o.path, x, y)) {
 				if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && this.isClick && o.drawonclicking) { o.drawonclicking(ctx); }
 				if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.drawonhover) { o.drawonhover(ctx);} 
 			}
@@ -263,32 +263,35 @@ class BBCanvas {
 	};
 
 	#initEvent() {
-		this.#div.addEventListener("mousedown", function(event) {
-			this.#dragStart(event.clientX, event.clientY, event.target.getBoundingClientRect());
-		}.bind(this));
+		if (IS_SMARTPHONE) {
+			this.#div.addEventListener("touchstart", function(event) {
+				this.#dragStart(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
+			}.bind(this));
 
-		this.#div.addEventListener("touchstart", function(event) {
-			this.#dragStart(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
-		}.bind(this));
-		
-		this.#div.addEventListener("mousemove", function(event) {
-			this.#dragContinue(event.clientX, event.clientY, event.target.getBoundingClientRect())
-		}.bind(this));
-		
-		this.#div.addEventListener("touchmove", function(event) {
-			this.#dragContinue(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
-		}.bind(this));
-		
-		this.#div.addEventListener("mouseup", function(event) {
-			this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
-		}.bind(this));
-		
-		this.#div.addEventListener("mouseleave", function(event) {
-			this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
-		}.bind(this));
-		
-		this.#div.addEventListener("touchend", function(event) {
-			this.#dragEnd(event.changedTouches[0].clientX, event.changedTouches[0].clientY, event.target.getBoundingClientRect());
-		}.bind(this));
-	}
+			this.#div.addEventListener("touchmove", function(event) {
+				this.#dragContinue(event.touches[0].clientX, event.touches[0].clientY, event.target.getBoundingClientRect())
+			}.bind(this));
+			
+			this.#div.addEventListener("touchend", function(event) {
+				this.#dragEnd(event.changedTouches[0].clientX, event.changedTouches[0].clientY, event.target.getBoundingClientRect());
+			}.bind(this));
+		}
+		else {
+			this.#div.addEventListener("mousedown", function(event) {
+				this.#dragStart(event.clientX, event.clientY, event.target.getBoundingClientRect());
+			}.bind(this));
+	
+			this.#div.addEventListener("mousemove", function(event) {
+				this.#dragContinue(event.clientX, event.clientY, event.target.getBoundingClientRect())
+			}.bind(this));
+			
+			this.#div.addEventListener("mouseup", function(event) {
+				this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
+			}.bind(this));
+			
+			this.#div.addEventListener("mouseleave", function(event) {
+				this.#dragEnd(event.clientX, event.clientY, event.target.getBoundingClientRect());
+			}.bind(this));
+		}
+	};
 }
