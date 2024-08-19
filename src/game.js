@@ -1,4 +1,4 @@
-const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: false, isCityTableEnabled: false}) => {
+const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: true, isCityTableEnabled: true}) => {
 	const tiles = new GameTiles(config.initialHandLength);
 	const objects = {};
 
@@ -25,7 +25,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 				}
 				canvas.update();
 				await sleep(300);
-				tiles.tsumo();
+				tiles.tsumo(false);
 				canvas.eventDisabled = false;
 				canvas.update();
 			}
@@ -61,7 +61,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 				canvas.eventDisabled = true;
 				canvas.update();
 				await sleep(300);
-				tiles.tsumo();
+				tiles.tsumo(true);
 				canvas.eventDisabled = false;
 				canvas.update();
 			}
@@ -75,7 +75,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 				ctx.drawText("面子選択", x + .25, y + .4, {size: .5, valign: "middle"});
 			},
 			onclick: function() {
-				selectngInit(tiles);
+				selectngInit();
 				isSelecting = !isSelecting;
 				canvas.update();
 			},
@@ -127,7 +127,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 		objects.finishedButtons = [
 			{
 				rect: [3, 5.8, 4, .8],
-				text: "もう一度",
+				text: "もう一度遊ぶ",
 				onclick: () => gameScene(canvas, config)
 			},
 			{
@@ -146,7 +146,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 			onclick: data.onclick,
 			drawonhover: function(ctx) { drawonhover(ctx, this.path); }
 		}));
-		Object.assign(objects, selecting(canvas, tiles, () => !isSelecting , () => isSelecting = false));
+		Object.assign(objects, selecting(canvas, tiles, () => !isSelecting , () => isSelecting = false, config));
 		canvas.objects = [];
 		for (let obj in objects) {
 			if (Array.isArray(objects[obj])) {
@@ -168,7 +168,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 	};
 
 	canvas.onevent = (ctx, x, y, startx, starty) => {
-		if (config.isCityTableEnabled) {
+		if (config.isCityTableEnabled && !checkIsPaused()) {
 			drawCityTableIfNeed(canvas, ctx, tiles, x, y, startx, starty);
 		}
 		if (Math.abs(x - startx) > 1) {

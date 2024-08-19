@@ -14,5 +14,8 @@ const menuScene = (canvas) => {
 		ctx.drawText("市町村麻雀", 8, 1.5, {size:2, align: "center", style: "bold", color: COLOR_STRONG});
 	};
 
+	canvas.onevent = () => {};
+	canvas.onmouseup = () => {};
+	
 	canvas.update();
 };

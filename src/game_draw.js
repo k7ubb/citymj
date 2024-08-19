@@ -203,7 +203,7 @@ const drawHandGuide = (canvas, ctx, tiles) => {
 	}
 };
 
-const drawCityTable = (canvas, ctx, character) => {
+const drawCityTable = (canvas, ctx, hand, character) => {
 	const RECT_Y = .25;
 	const TEXT_SIZE = .39;
 	const TEXT_LINES = 11;
@@ -213,7 +213,8 @@ const drawCityTable = (canvas, ctx, character) => {
 	ctx.fill(canvas.makePath({rect: [start_x - .15, RECT_Y - .15, 16 - start_x * 2 + .3, TEXT_SIZE * 1.5 * TEXT_LINES + .1]}), COLOR_STRONG);
 	ctx.fill(canvas.makePath({rect: [start_x - .1, RECT_Y - .1, 16 - start_x * 2 + .2, TEXT_SIZE * 1.5 * TEXT_LINES]}), "#fff");
 	for (let i = 0; i < cities.length; i++) {
-		ctx.drawText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE});
+		const isInHand = cities[i].name.split("").map(char => hand.map(tile => tile.character).includes(char)).reduce((a, b) => a && b, true);
+		ctx.drawText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE, style: isInHand? "bold" : ""});
 	}
 };
 
@@ -223,7 +224,7 @@ const drawCityTableIfNeed = (canvas, ctx, tiles, x, y, startx, starty) => {
 	for (let i = 0; i < handRect.length; i++) {
 		if (ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), x, y)){
 			if (canvas.isClick && !ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), startx, starty)){ return; }
-			drawCityTable(canvas, ctx, tiles.hand[i].character);
+			drawCityTable(canvas, ctx, tiles.hand, tiles.hand[i].character);
 		}
 	}
 };
