@@ -5,8 +5,7 @@ addEventListener("load", () => {
 	canvas.invX = (x) => x * 16 / canvas.width;
 	canvas.invY = (y) => y * 9 / canvas.height;
 
-//	menuScene(canvas);
-	gameScene(canvas);
+	menuScene(canvas);
 });
 
 const drawGrid = (canvas, ctx) => {

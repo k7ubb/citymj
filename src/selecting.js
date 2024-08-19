@@ -3,11 +3,11 @@ const SELECT_WIN_BUTTON_RECT = [12.5, 7.8, 3, .8];
 
 let selectedCities = [];
 
-const selectngInit = (tiles) => {
+const selectngInit = () => {
 	selectedCities = [];
 };
 
-const selecting = (canvas, tiles, checkIsSelecting, unSelect) => ({
+const selecting = (canvas, tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 	dialog: {
 		disabled: checkIsSelecting,
 		draw: function(ctx) {
@@ -56,11 +56,12 @@ const selecting = (canvas, tiles, checkIsSelecting, unSelect) => ({
 		draw: function(ctx) { if (this.path) drawSelectingHandGuide(canvas, ctx, this) },
 		drawonhover: function(ctx) { if (this.path) drawonhover(ctx, this.path); },
 		onclick: async function() {
-			if (selectedCities.includes(tiles.group[i]) ){
-				selectedCities = selectedCities.filter(x => x !== tiles.group[i]);
+			const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
+			if (selectedCities.includes(citiesLessFourLength[i]) ){
+				selectedCities = selectedCities.filter(x => x !== citiesLessFourLength[i]);
 			}
 			else {
-				selectedCities.push(tiles.group[i]);
+				selectedCities.push(citiesLessFourLength[i]);
 			}
 			canvas.update();
 		}
@@ -75,8 +76,26 @@ const selecting = (canvas, tiles, checkIsSelecting, unSelect) => ({
 		},
 		drawonhover: function(ctx) { drawonhover(ctx, this.path); },
 		onclick: function(){
-			//todo: 点数計算処理
-			console.log(tiles, selectedCities)
+			const cities = selectedCities.map(city_ => {
+				const {
+					position,
+					length,
+					...city
+				} = city_;
+				const cityTiles = [];
+				for (let i = city_.position; i < city_.position + city_.length; i++) {
+					cityTiles.push(tiles.hand[i]);
+				}
+				return {...city, tiles: cityTiles};
+			});
+			for (let kan of tiles.kans) {
+				const cityname = kan.reduce((a, b) => a + b.character, "");
+				cities.push({
+					...CITIES.filter(city => city.name === cityname)[0],
+					tiles: kan
+				});
+			}
+			scoreScene(canvas, tiles, cities, configToHandOver);
 		}
 	}
 });
@@ -117,7 +136,7 @@ const selectingOnMouseup = (canvas, tiles, ctx, x, y, startx, starty) => {
 			for (let j = 0; j < dragRect.length; j++) {
 				if (ctx.isPointInPath(canvas.makePath({rect: dragRect[j]}), x, y)) {
 					tiles.replaceHand(i, j);
-					selectngInit(tiles);
+					selectngInit();
 					canvas.update();
 					return;
 				};
@@ -137,8 +156,10 @@ const updateSelectingHandGuide = (canvas, tiles, objects) => {
 	for (let obj of objects.selectingGroup) {
 		delete obj.path;
 		delete obj.eventDisabled;
+		delete obj.city;
 	}
-	for (let city of tiles.group) {
+	const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
+	for (let city of citiesLessFourLength) {
 		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 		let line = 0; while(set.includes(line)) { line++; }
 		const nth = objectCount++;
@@ -212,7 +233,7 @@ const drawSelectingHandGuide = (canvas, ctx, object) => {
 		}
 	};
 	if (selectedCities.includes(object.city)) {
-		ctx.stroke(object.path, COLOR_STRONG, {width: canvas.pixel * 3});
+		ctx.stroke(object.path, COLOR_STRONG, {width: canvas.pixel * devicePixelRatio * 3});
 	}
 	ctx.fill(object.path, fillColor(object.city.category));
 	ctx.drawText(object.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", valign: "middle"});
