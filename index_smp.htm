@@ -15,10 +15,17 @@ html, body {
 	background: #ccc;
 	overflow: hidden;
 }
+img {
+	position: absolute;
+	width: 1000px;
+	top : 0;
+	left: calc(calc(100% - 1000px) / 2);
+}
 #game {
-	margin: 0 auto;
-	position: relative;
-	max-height: 100%;
+	position: absolute;
+	top: 288px;
+	left: calc(calc(100% - 750px) / 2);
+	height: 422px;
 	aspect-ratio: 16 / 9;
 	background: #fff;
 }
@@ -32,6 +39,7 @@ canvas {
 </head>
 
 <body>
+<img src="iphone.png">
 <div id="game"></div>
 <script src="src/const.js"></script>
 <script src="src/menu.js"></script>
