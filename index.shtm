@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" type="text/css" href="/assets/style.css">
+<link rel="manifest" href="manifest.json">
+<script src="https://kit.fontawesome.com/3f2884befc.js" crossorigin="anonymous"></script>
+<script src="bbcanvas.js"></script>
+<title>市町村麻雀</title>
+<style>
+.game_wrap {
+	margin: 0 auto;
+	position: relative;
+	width: 100%;
+	max-width: 800px;
+	aspect-ratio: 16 / 9;
+}
+.game_wrap #fullscreen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border: none;
+	background: rgb(0 0 0 / .2);
+	color: #fff;
+	font-size: 30px;
+}
+.game_wrap #close {
+	display: none;
+}
+#game {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+canvas {
+	user-select: none; 
+  -webkit-user-select: none; 
+  -moz-user-select: none; 
+	-webkit-touch-callout: none;
+}
+body.play {
+	overflow: hidden;
+}
+body.play .game_wrap {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: none;
+	height: 100%;
+	background: rgb(0 0 0 / .9);
+}
+body.play #fullscreen {
+	display: none;
+}
+body.play #close {
+	display: inherit;
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 1;
+	width: 40px;
+	height: 40px;
+	border: none;
+	background: #ccc;
+}
+body.play #close:hover {
+	background: #999;
+}
+body.play #close i {
+	line-height: 20px;
+	font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+<!--#exec cgi="/assets/header.cgi"-->
+
+<div>
+<p>※ベータ版 240820更新</p>
+<h1>市町村麻雀</h1>
+<p>地歴エンターテイメント（<a href="https://x.com/chirekienter" target="_blank">@chirekienter</a>）さん発案の市町村麻雀を、ひとりで気楽に遊べます。</p>
+
+<div class="game_wrap">
+<div id="game"></div>
+<button id="fullscreen">フルスクリーンで表示</button>
+<button id="close"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<h2>ルール (本家との相違点)</h2>
+<ul>
+<li>ひとり麻雀なので、ポン・チーはできません。</li>
+<li>数字が10以上の牌にくっつけて、2文字の市町村をつくっても上がれます。(ツモだけだと上がるチャンスが少ないため)</li>
+<li>36枚目の捨て牌を捨てたところで終局です。</li>
+</ul>
+
+<h2>操作方法</h2>
+<ul>
+<li>「市町村一覧を表示」をチェックした状態で、手牌にマウスを載せると、その牌を使って作れる市町村の一覧が表示されます。<br>
+手牌の中で完成させられる市町村は太字で表示されます。</li>
+<li>「リーチ」をチェックした状態で牌を切るとリーチできます。<span style="#f00">テンパイしていなくてもリーチできます</span>が、それ以降は手牌を入れ替えられなくなるので、待ちを確認してからリーチしてください。</li>
+</ul>
+
+</div>
+
+<!--#exec cgi="/assets/footer.cgi"-->
+
+<script src="src/const.js"></script>
+<script src="src/menu.js"></script>
+<script src="src/game_data.js"></script>
+<script src="src/game_system.js"></script>
+<script src="src/game_draw.js"></script>
+<script src="src/selecting.js"></script>
+<script src="src/score.js"></script>
+<script src="src/game.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

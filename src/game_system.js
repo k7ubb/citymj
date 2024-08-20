@@ -90,5 +90,4 @@ class GameTiles {
     this.trash = new Array(MAX_COUNT).fill();
     this.updateGroup();
   };
-
 }
