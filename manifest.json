@@ -1,7 +1,19 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "市町村麻雀",
+  "name": "市町村麻雀",
   "start_url": ".",
+  "background_color": "#9DCCDF",
   "display": "standalone",
-	"orientation": "landscape"
+  "icons": [
+    {
+      "src": "icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

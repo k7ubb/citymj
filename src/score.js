@@ -162,6 +162,9 @@ const findYaku = (tiles, cities) => {
 	if (cities.filter(city => city.name.length === 4).length === 3) {
 		yakuman.push({name: "三槓子", point: 1});
 	}
+	if (cities.filter(city => city.name.length === 3).length === 4) {
+		yakuman.push({name: "四面子", point: 1});
+	}
 	if (cities.filter(city => city.name.length === 4).length === 4) {
 		yakuman.push({name: "四槓子", point: 2});
 	}

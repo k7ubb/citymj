@@ -23,8 +23,7 @@ class BBCanvas {
 		: [this.#logicalWidth * y / this.#height, this.#logicalHeight * (1 - x / this.#width)];
 	}
 		
-	get pixel() { return Math.min(...this.#invXY(1, 1)); }
-	get devicePixel() { return this.pixel() * devicePixelRatio; }
+	get pixel() { return Math.min(...this.#invXY(1, 1)) * devicePixelRatio; }
 
 	#rotate(bool) {
 		if (bool) {

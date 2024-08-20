@@ -16,7 +16,7 @@ const menuScene = (canvas) => {
 
 	canvas.onupdateFinally = (ctx) => {};
 
-	canvas.onevent = () => {};
+	//canvas.onclick = (ctx, x, y) => { alert(x + ":" + y)};
 	canvas.onmouseup = () => {};
 	
 	canvas.update();
