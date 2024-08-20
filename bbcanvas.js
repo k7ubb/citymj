@@ -8,11 +8,60 @@ class BBCanvas {
 	#width;
 	#height;
 	
+	#logicalWidth;
+	#logicalHeight;
+	
 	get width() { return this.#width; }
 	get height() { return this.#height; }
 
-	constructor(div) {
-		this.#div = div;		
+	#x(x) { return x * (!this.#isRotated? this.#width : this.#height) / this.#logicalWidth; }
+	#y(y) { return y * (!this.#isRotated? this.#height : this.#width) / this.#logicalHeight; }
+
+	#invXY(x, y) {
+		return !this.#isRotated
+		? [x * this.#logicalWidth / this.#width, y * this.#logicalHeight / this.#height]
+		: [this.#logicalWidth * y / this.#height, this.#logicalHeight * (1 - x / this.#width)];
+	}
+		
+	get pixel() { return Math.min(...this.#invXY(1, 1)); }
+	get devicePixel() { return this.pixel() * devicePixelRatio; }
+
+	#rotate(bool) {
+		if (bool) {
+			this.#isRotated = true;
+			this.#canvas_f.getContext("2d").rotate(Math.PI / 2);
+			this.#canvas_b.getContext("2d").rotate(Math.PI / 2);
+			this.#canvas_f.getContext("2d").translate(0, -this.#width);
+			this.#canvas_b.getContext("2d").translate(0, -this.#width);
+			this.#execOnupdate();
+		}
+		else {
+			this.#isRotated = false;
+			this.#canvas_f.getContext("2d").translate(0, this.#width);
+			this.#canvas_b.getContext("2d").translate(0, this.#width);
+			this.#canvas_f.getContext("2d").rotate(-Math.PI / 2);
+			this.#canvas_b.getContext("2d").rotate(-Math.PI / 2);
+			this.#execOnupdate();
+		}
+	};
+
+	#isRotated = false;
+
+	set isRotated(bool) {
+		if (bool !== this.#isRotated) {
+			this.#rotate(bool);
+			this.#isRotated = bool;
+		}
+	};
+
+	get isRotated() {
+		return this.#isRotated;
+	};
+
+	constructor(div, logicalWidth, logicalHeight) {
+		this.#div = div;
+		this.#logicalWidth  = logicalWidth;
+		this.#logicalHeight = logicalHeight;
 		this.#canvas_b = document.createElement("canvas");
 		this.#canvas_f = document.createElement("canvas");
 		this.#canvas_b.style.cssText = this.#canvas_f.style.cssText = `
@@ -22,17 +71,18 @@ class BBCanvas {
 		`;
 		this.#div.appendChild(this.#canvas_b);
 		this.#div.appendChild(this.#canvas_f);
-		
-		this.#resize();
-		
-		addEventListener("resize", function() {
+				
+		const resizeObserver = new ResizeObserver(() => {
 			this.#resize();
+			if (this.#isRotated) { this.#rotate(true); }
 			this.#execOnupdate();
-		}.bind(this));
-		
+		});
+		resizeObserver.observe(this.#div);
+
 		this.#initEvent();
 	};
 	
+
 	#resize() {
 		this.#width  = this.#div.clientWidth  * devicePixelRatio;
 		this.#height = this.#div.clientHeight * devicePixelRatio;
@@ -107,38 +157,29 @@ class BBCanvas {
 		this.#onmouseup = f;
 	}
 
-	#execOnclick (x, y, startx, starty, time) {
+	#execOnclick (x, y, startx, starty) {
 		if (this.eventDisabled) { return; }
 		const ctx = this.#ctx(this.#canvas_f.getContext("2d"));
 		ctx.clear();
-		this.#onclick(ctx, x, y, startx, starty, time);
+		this.#onclick(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
 			if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.onclick && o.path && ctx.isPointInPath(o.path, x, y)) {
-				o.onclick(ctx, x, y, startx, starty, time);
+				o.onclick(ctx, x, y, startx, starty);
 			}
 		}
 	}
 
-	#execOnmouseup (x, y, startx, starty, time) {
+	#execOnmouseup (x, y, startx, starty) {
 		if (this.eventDisabled) { return; }
 		const ctx = this.#ctx(this.#canvas_f.getContext("2d"));
 		ctx.clear();
-		this.#onmouseup(ctx, x, y, startx, starty, time);
+		this.#onmouseup(ctx, x, y, startx, starty);
 		for (let o of this.objects) {
 			if (!this.#eval(o.disabled) && !this.#eval(o.eventDisabled) && o.onmouseup && ctx.isPointInPath(o, x, y)) {
-				o.onmouseup(ctx, x, y, startx, starty, time);
+				o.onmouseup(ctx, x, y, startx, starty);
 			}
 		}
 	}
-
-
-	// 座標変換: ユーザ側で定義
-	x(x) { return x; }
-	y(y) { return y; }
-	invX(x) { return x; }
-	invY(y) { return y; }
-
-	get pixel() { return this.invX(1); }
 
 	makePath (arg) {
 		const points = arg.points || [
@@ -150,23 +191,23 @@ class BBCanvas {
 		if (arg.radius) {
 			return (ctx) => {
 				ctx.beginPath();
-				ctx.moveTo(this.x(points[0][0] + arg.radius), this.y(points[0][1]));
-				ctx.arc(this.x(points[0][0] + arg.radius), this.y(points[0][1] + arg.radius), this.x(arg.radius), Math.PI * 1.5, Math.PI, true);
-				ctx.lineTo(this.x(points[1][0]), this.y(points[1][1] - arg.radius));
-				ctx.arc(this.x(points[1][0] + arg.radius), this.y(points[1][1] - arg.radius), this.x(arg.radius), Math.PI, Math.PI * .5, true);
-				ctx.lineTo(this.x(points[2][0] - arg.radius), this.y(points[2][1]));
-				ctx.arc(this.x(points[2][0] - arg.radius), this.y(points[2][1] - arg.radius), this.x(arg.radius), Math.PI * .5, 0, true);
-				ctx.lineTo(this.x(points[3][0]), this.y(points[3][1] + arg.radius));
-				ctx.arc(this.x(points[3][0] - arg.radius), this.y(points[3][1] + arg.radius), this.x(arg.radius), 0, Math.PI * 1.5, true);
+				ctx.moveTo(this.#x(points[0][0] + arg.radius), this.#y(points[0][1]));
+				ctx.ellipse(this.#x(points[0][0] + arg.radius), this.#y(points[0][1] + arg.radius), this.#x(arg.radius), this.#y(arg.radius), 0, Math.PI * 1.5, Math.PI, true);
+				ctx.lineTo(this.#x(points[1][0]), this.#y(points[1][1] - arg.radius));
+				ctx.ellipse(this.#x(points[1][0] + arg.radius), this.#y(points[1][1] - arg.radius), this.#x(arg.radius), this.#y(arg.radius), 0, Math.PI, Math.PI * .5, true);
+				ctx.lineTo(this.#x(points[2][0] - arg.radius), this.#y(points[2][1]));
+				ctx.ellipse(this.#x(points[2][0] - arg.radius), this.#y(points[2][1] - arg.radius), this.#x(arg.radius), this.#y(arg.radius), 0, Math.PI * .5, 0, true);
+				ctx.lineTo(this.#x(points[3][0]), this.#y(points[3][1] + arg.radius));
+				ctx.ellipse(this.#x(points[3][0] - arg.radius), this.#y(points[3][1] + arg.radius), this.#x(arg.radius), this.#y(arg.radius), 0, 0, Math.PI * 1.5, true);
 				ctx.closePath();
 			};
 		}
 		else {
 			return (ctx) => {
 				ctx.beginPath();
-				ctx.moveTo(this.x(points[0][0]), this.y(points[0][1]));
+				ctx.moveTo(this.#x(points[0][0]), this.#y(points[0][1]));
 				for (let i = 1; i < points.length; i++) {
-					ctx.lineTo(this.x(points[i][0]), this.y(points[i][1]));
+					ctx.lineTo(this.#x(points[i][0]), this.#y(points[i][1]));
 				}
 				ctx.closePath();
 			};
@@ -179,7 +220,7 @@ class BBCanvas {
 			context: ctx,
 			pixel: this.pixel,
 			clear: () => {
-				ctx.clearRect(0, 0, this.width, this.height);
+				ctx.clearRect(this.#x(0), this.#y(0), this.#x(this.#logicalWidth), this.#y(this.#logicalHeight));
 			},
 			fill: function(path, color) {
 				path(ctx);
@@ -188,16 +229,18 @@ class BBCanvas {
 			},
 			stroke: function(path, color, {width=this.pixel} = {}) {
 				path(ctx);
-				ctx.lineWidth = draw.x(width);
+				ctx.lineWidth = draw.#x(width);
 				ctx.strokeStyle = color;
 				ctx.stroke();
 			},
-			isPointInPath: function(path, x, y){
+			isPointInPath: (path, x, y) => {
+				const coef = (this.#width * this.#logicalWidth) / (this.#height * this.#logicalHeight);
+				const [x_, y_] = !this.#isRotated? [x, y] : [(this.#logicalHeight - y) * coef, x / coef];
 				path(ctx);
-				return ctx.isPointInPath(draw.x(x), draw.y(y));
+				return ctx.isPointInPath(draw.#x(x_), draw.#y(y_));
 			},
 			drawText: function(text, x, y, {color="#000", size=1, font="sans-serif", style="", align="left", valign="top", rotate} = {}) {
-				ctx.font = `${style} ${draw.x(size)}px ${font}`;
+				ctx.font = `${style} ${draw.#x(size)}px ${font}`;
 				ctx.fillStyle = color;
 				ctx.textAlign = align;
 				ctx.textBaseline = valign;
@@ -205,13 +248,13 @@ class BBCanvas {
 					ctx.rotate(rotate);
 					ctx.fillText(
 						text,
-						Math.cos(rotate) * draw.x(x) + Math.sin(rotate) * draw.y(y),
-						-Math.sin(rotate) * draw.x(x) + Math.cos(rotate) * draw.y(y),
+						Math.cos(rotate) * draw.#x(x) + Math.sin(rotate) * draw.#y(y),
+						-Math.sin(rotate) * draw.#x(x) + Math.cos(rotate) * draw.#y(y),
 					);
 					ctx.rotate(-rotate);
 				}
 				else {
-					ctx.fillText(text, draw.x(x), draw.y(y));
+					ctx.fillText(text, draw.#x(x), draw.#y(y));
 				}
 			}
 		};
@@ -225,7 +268,6 @@ class BBCanvas {
 	#mouse_start_x_ = -1;
 	#mouse_start_y_ = -1;
 	#mouse_click = false;
-	#mouse_start_time;
 
 	get isClick() { return this.#mouse_click; }
 	
@@ -233,29 +275,27 @@ class BBCanvas {
 		this.#mouse_start_x_ = this.#mouse_x_ = (this.#mouse_x_ = clientX_ - offset.left) * devicePixelRatio;
 		this.#mouse_start_y_ = this.#mouse_y_ = (this.#mouse_y_ = clientY_ - offset.top) * devicePixelRatio;
 		this.#mouse_click = true;
-		this.#mouse_start_time = new Date().getTime();
-		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
+		this.#execOnevent(...this.#invXY(this.#mouse_x_, this.#mouse_y_), ...this.#invXY(this.#mouse_start_x_, this.#mouse_start_y_));
 	};
 
 	#dragContinue(clientX_, clientY_, offset) {
 		this.#mouse_x_ = (clientX_ - offset.left) * devicePixelRatio;
 		this.#mouse_y_ = (clientY_ - offset.top) * devicePixelRatio;
-		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
+		this.#execOnevent(...this.#invXY(this.#mouse_x_, this.#mouse_y_), ...this.#invXY(this.#mouse_start_x_, this.#mouse_start_y_));
 	};
 
 	#dragEnd(clientX_, clientY_, offset) {
 		this.#mouse_x_ = (clientX_ - offset.left) * devicePixelRatio;
 		this.#mouse_y_ = (clientY_ - offset.top) * devicePixelRatio;
-		this.#execOnevent(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_));
+		this.#execOnevent(...this.#invXY(this.#mouse_x_, this.#mouse_y_), ...this.#invXY(this.#mouse_start_x_, this.#mouse_start_y_));
 		const diff = (this.#mouse_x_ - this.#mouse_start_x_)**2 + (this.#mouse_y_ - this.#mouse_start_y_)**2;
-		const time = new Date().getTime() - this.#mouse_start_time;
 		if (this.#mouse_click) {
 			this.#mouse_click = false;
 			if (diff < 16) {
-				this.#execOnclick(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_), time);
+				this.#execOnclick(...this.#invXY(this.#mouse_x_, this.#mouse_y_), ...this.#invXY(this.#mouse_start_x_, this.#mouse_start_y_));
 			}
 			else {
-				this.#execOnmouseup(this.invX(this.#mouse_x_), this.invY(this.#mouse_y_), this.invX(this.#mouse_start_x_), this.invY(this.#mouse_start_y_), time);
+				this.#execOnmouseup(...this.#invXY(this.#mouse_x_, this.#mouse_y_), ...this.#invXY(this.#mouse_start_x_, this.#mouse_start_y_));
 			}
 		}
 		this.#mouse_start_x_ = this.#mouse_x_ = -1;

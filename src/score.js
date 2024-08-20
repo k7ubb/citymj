@@ -31,7 +31,7 @@ const scoreScene = (canvas, tiles, cities, configToHandOver) => {
 		drawCityNames(canvas, ctx, cities);
 		drawYaku(canvas, ctx, yaku, showCount, () => { showCount++; });
 		drawScore(canvas, ctx, yaku, showCount);
-		ctx.fill(canvas.makePath({rect: [4.5, 1.8, canvas.pixel * devicePixelRatio * 2, 6.8]}), COLOR_STRONG)
+		ctx.fill(canvas.makePath({rect: [4.5, 1.8, canvas.pixel * 2, 6.8]}), COLOR_STRONG)
 	};
 
 	canvas.onevent = () => {};

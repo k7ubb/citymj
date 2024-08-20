@@ -233,7 +233,7 @@ const drawSelectingHandGuide = (canvas, ctx, object) => {
 		}
 	};
 	if (selectedCities.includes(object.city)) {
-		ctx.stroke(object.path, COLOR_STRONG, {width: canvas.pixel * devicePixelRatio * 3});
+		ctx.stroke(object.path, COLOR_STRONG, {width: canvas.pixel * 3});
 	}
 	ctx.fill(object.path, fillColor(object.city.category));
 	ctx.drawText(object.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", valign: "middle"});

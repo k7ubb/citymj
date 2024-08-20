@@ -1,10 +1,6 @@
 addEventListener("load", () => {
-	const canvas = new BBCanvas(document.getElementById("game"));
-	canvas.x = (x) => x * canvas.width / 16;
-	canvas.y = (y) => y * canvas.height / 9;
-	canvas.invX = (x) => x * 16 / canvas.width;
-	canvas.invY = (y) => y * 9 / canvas.height;
-
+	window.canvas = new BBCanvas(document.getElementById("game"), 16, 9);
+	if (!location.pathname.includes("smp") || 1) canvas.isRotated = true;
 	menuScene(canvas);
 });
 
