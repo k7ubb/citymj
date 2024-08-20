@@ -175,7 +175,10 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 			const handRect = calcHandRect(canvas, tiles);
 			const dragRect = calcHandRect(canvas, tiles, true);
 			for (let i = 0; i < handRect.length; i++) {
-				if (ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), startx, starty)) {
+				if (
+					ctx.isPointInPath(canvas.makePath({rect: handRect[i]}), startx, starty) &&
+					ctx.isPointInPath(canvas.makePath({rect: [0, handRect[0][1], 16, handRect[0][3]]}), x, y)
+				) {
 					drawDraggingTile(canvas, ctx, handRect[i], tiles.hand[i], x);
 					for (let j = 0; j < dragRect.length; j++) {
 						if (i !== j && i + 1 !== j && ctx.isPointInPath(canvas.makePath({rect: dragRect[j]}), x, y)) {
