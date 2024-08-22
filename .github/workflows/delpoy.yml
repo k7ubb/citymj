@@ -20,5 +20,3 @@ jobs:
           exclude: |
             .git/**
             .github/**
-            citymj/app/**
-            titech/log/**
