@@ -1,7 +1,8 @@
 {
   "short_name": "市町村麻雀",
   "name": "市町村麻雀",
-  "start_url": ".",
+  "start_url": "/citymj/app/",
+  "scope": "/citymj/app/",
   "background_color": "#9DCCDF",
   "display": "standalone",
   "icons": [

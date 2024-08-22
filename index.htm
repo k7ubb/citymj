@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<script src="https://kit.fontawesome.com/3f2884befc.js" crossorigin="anonymous"></script>
+<script src="bbcanvas.js"></script>
+<title>一人市町村麻雀</title>
+<style>
+canvas {
+	user-select: none; 
+	-webkit-user-select: none; 
+	-moz-user-select: none; 
+	-webkit-touch-callout: none;
+}
+body {
+	background: #000;
+}
+#game {
+	position: fixed;
+}
+.open {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 40px;
+	height: 40px;
+	line-height: 40px;
+	text-align: center;
+	background: #ccc;
+	color: #333;
+}
+.open:hover {
+	background: #999;
+}
+.open i {
+	font-size: 20px;
+	line-height: 40px;
+}
+</style>
+</head>
+
+<body>
+<div id="game"></div>
+<a href="../" class="open"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+
+<script src="const.js"></script>
+<script src="menu.js"></script>
+<script src="game_data.js"></script>
+<script src="game_system.js"></script>
+<script src="game_draw.js"></script>
+<script src="selecting.js"></script>
+<script src="score.js"></script>
+<script src="game.js"></script>
+<script src="main.js"></script>
+<script>
+if (!matchMedia("(display-mode: standalone)").matches  ) {
+	location.pathname = location.pathname.replace("/app", "");
+}
+resizeObserver.observe(document.body);
+addEventListener("orientationchange", changeCanvasSize);
+</script>
+</body>
+</html>
