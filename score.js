@@ -168,7 +168,7 @@ const findYaku = (tiles, cities) => {
 	if (cities.filter(city => city.name.length === 4).length === 4) {
 		yakuman.push({name: "四槓子", point: 2});
 	}
-	if (prefCounts.length === 1) {
+	if (Object.keys(prefCounts).length === 1) {
 		yakuman.push({name: "清連泊", point: 1});
 	}
 
@@ -242,19 +242,19 @@ const findYaku = (tiles, cities) => {
 		yaku.push({name: "全村", point: 4});
 	}
 
-	if (cities.filter(city => city.seirei).length === 4) {
+	if (cities.filter(city => city.seirei).length >= 4) {
 		yaku.push({name: "四政令", point: 6});
 	}
-	if (cities.filter(city => city.kento).length === 5) {
+	if (cities.filter(city => city.kento).length >= 5) {
 		yaku.push({name: "五県都", point: 6});
 	}
-	if (cities.filter(city => city.ritou).length === 4) {
+	if (cities.filter(city => city.ritou).length >= 4) {
 		yaku.push({name: "四離島", point: 3});
 	}
 	if (cities.filter(city => city.name.length === 4).length === 2) {
 		yaku.push({name: "二槓子", point: 3});
 	}
-	if (maxRenpaku === 5) {
+	if (maxRenpaku >= 5) {
 		yaku.push({name: `五連泊 (${maxRenpakuPref})`, point: 6});
 	}
 	if (doraCount) {
