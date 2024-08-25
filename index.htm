@@ -59,7 +59,7 @@ body {
 <script src="game.js"></script>
 <script src="main.js"></script>
 <script>
-if (!matchMedia("(display-mode: standalone)").matches) {
+if (!matchMedia("(display-mode: standalone)").matches && location.pathname.includes("app")) {
 	location.pathname = location.pathname.replace("/app", "");
 }
 resizeObserver.observe(document.body);

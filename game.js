@@ -72,7 +72,7 @@ const gameScene = (canvas, config = {initialHandLength: 14, isHandGuideEnabled: 
 			draw: function(ctx) {
 				const [x, y, w, h] = SELECT_BUTTON_RECT;
 				ctx.fill(canvas.makePath({rect: [x, y, w, h], radius: .4}), "#ccc")
-				ctx.drawText("面子選択", x + .25, y + .4, {size: .5, valign: "middle"});
+				ctx.drawText("点数計算", x + .25, y + .4, {size: .5, valign: "middle"});
 			},
 			onclick: function() {
 				selectngInit();

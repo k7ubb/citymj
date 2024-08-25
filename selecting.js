@@ -72,7 +72,7 @@ const selecting = (canvas, tiles, checkIsSelecting, unSelect, configToHandOver) 
 		draw: function(ctx) {
 			const [x, y, w, h] = SELECT_WIN_BUTTON_RECT;
 			ctx.fill(this.path, COLOR_BACKGROUND)
-			ctx.drawText("点数計算へ", x + .25, y + .4, {size: .5, valign: "middle"});
+			ctx.drawText("面子を確定", x + .25, y + .4, {size: .5, valign: "middle"});
 		},
 		drawonhover: function(ctx) { drawonhover(ctx, this.path); },
 		onclick: function(){
