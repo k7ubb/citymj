@@ -137,9 +137,6 @@ const findYaku = (tiles, cities) => {
 	const doraCount = allTiles.filter(tile => doraChar.includes(tile.character)).length + allTiles.filter(tile => tile.red).length;
 
 	const yakuman = [];
-	if (tiles.count === 0 && !tiles.isRinshan) {
-		yakuman.push({name: "天和", point: 1});
-	}
 	if (cities.filter(city => city.seirei).length >= 5) {
 		if (cities.filter(city => !city.seirei).length === 0) {
 			yakuman.push({name: "清政令", point: 2});
@@ -173,6 +170,9 @@ const findYaku = (tiles, cities) => {
 	}
 
 	const yaku = [];
+	if (tiles.count === 0 && !tiles.isRinshan) {
+		yaku.push({name: "天和", point: 4});
+	}
 	if (tiles.reached) {
 		if (tiles.reactCount === 0) {
 			yaku.push({name: "二立直", point: 2});
