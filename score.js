@@ -145,7 +145,7 @@ const findYaku = (tiles, cities) => {
 			yakuman.push({name: "五政令", point: 1});
 		}
 	}
-	if (cities.filter(city => !city.ketno).length === 0) {
+	if (cities.filter(city => !city.kento).length === 0) {
 		yakuman.push({name: "清県都", point: 1});
 	}
 	if (cities.filter(city => city.ritou).length >= 5) {
