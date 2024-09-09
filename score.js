@@ -1,47 +1,47 @@
-const scoreScene = (canvas, tiles, cities, configToHandOver) => {
+const scoreScene = (tiles, cities, configToHandOver) => {
+	$.reset();
 	const yaku = findYaku(tiles, cities);
 	let showCount = 1;
-	canvas.objects = [
+
+	$.addItem([
 		{
 			rect: [11, 6.6, 4, .8],
 			text: "もう一度遊ぶ",
-			onclick: () => gameScene(canvas, configToHandOver)
+			onClick: () => gameScene(configToHandOver)
 		},
 		{
 			rect: [11, 7.6, 4, .8],
 			text: "メニューに戻る",
-			onclick: () => menuScene(canvas)
+			onClick: () => menuScene()
 		}
-	].map(data => ({
-		disabled: () => canvas.eventDisabled,
-		path: canvas.makePath({rect: data.rect, radius: .4}),
-		draw: function(ctx) {
-			const [x, y, w, h] = data.rect;
-			ctx.fill(this.path, "#ccc"),
-			ctx.drawText(data.text, x + w / 2, y + .4, {size: .5, align: "center", valign: "middle"});
+	].map(data => $.item({
+		disabled: () => $.eventDisabled,
+		rect: data.rect,
+		radius: .4,
+		draw: function() {
+			const [x, y, w, h] = this.rect;
+			$.ctx.bbFill(this.path, "#ccc"),
+			$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", valign: "middle"});
 		},
-		onclick: data.onclick,
-		drawonhover: function(ctx) { drawonhover(ctx, this.path); }
-	}));
-	canvas.eventDisabled = true;
+		onClick: data.onClick,
+		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+	})));
+	$.eventDisabled = true;
 
-	canvas.onupdate = (ctx) => {
-		ctx.fill(canvas.makePath({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
-		drawCityHands(canvas, ctx, cities);
-		drawCityNames(canvas, ctx, cities);
-		drawYaku(canvas, ctx, yaku, showCount, () => { showCount++; });
-		drawScore(canvas, ctx, yaku, showCount);
-		ctx.fill(canvas.makePath({rect: [4.5, 1.8, canvas.pixel * 2, 6.8]}), COLOR_STRONG)
+	$.draw = () => {
+		$.ctx.bbFill($.makePath({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
+		drawCityHands(cities);
+		drawCityNames(cities);
+		drawYaku(yaku, showCount, () => { showCount++; });
+		drawScore( yaku, showCount);
+		$.ctx.bbFill($.makePath({rect: [4.5, 1.8, lineWidth * 2, 6.8]}), COLOR_STRONG)
 	};
 
-	canvas.onevent = () => {};
-	canvas.onmouseup = () => {};
-
-	canvas.update();
+	$.update();
 };
 
 
-const drawCityHands = (canvas, ctx, cities) => {
+const drawCityHands = (cities) => {
 	const HAND_W = .8;
 	const GAP = .1;
 	const tile_length = cities.reduce((a, b) => a + b.tiles.length, 0);
@@ -50,7 +50,7 @@ const drawCityHands = (canvas, ctx, cities) => {
 	let nth_tile = 0;
 	for (let i = 0; i < cities.length; i++) {
 		for (let j = 0; j < cities[i].tiles.length; j++) {
-			drawTile(canvas, ctx, [
+			drawTile([
 				start_x + HAND_W * nth_tile + GAP * i,
 				.5,
 				HAND_W,
@@ -61,60 +61,60 @@ const drawCityHands = (canvas, ctx, cities) => {
 	}
 };
 
-const drawCityNames = (canvas, ctx, cities) => {
+const drawCityNames = (cities) => {
 	const NAME_X = 1;
 	const NAME_Y = 2;
 	const NAME_SIZE = .4;
 	for (let i = 0; i < cities.length; i++) {
-		ctx.drawText(`${cities[i].pref}${cities[i].name}${cities[i].category}`, NAME_X, NAME_Y + i * (NAME_SIZE * 1.5), {size: NAME_SIZE});
+		$.ctx.bbText(`${cities[i].pref}${cities[i].name}${cities[i].category}`, NAME_X, NAME_Y + i * (NAME_SIZE * 1.5), {size: NAME_SIZE});
 	}
 };
 
-const drawYaku = (canvas, ctx, {isYakuman, yaku}, count, increment) => {
+const drawYaku = ({isYakuman, yaku}, count, increment) => {
 	const YAKU_X = 5;
 	const YAKU_Y = 2;
 	const YAKU_SIZE = .4;
 	if (isYakuman) {
 		for (let i = 0; i < count; i++) {
-			ctx.drawText(yaku[i].point === 1? "役満" : "W役満", YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-			ctx.drawText(`${yaku[i].name}`, YAKU_X + 1.5, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(yaku[i].point === 1? "役満" : "W役満", YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 1.5, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
 		}
 	}
 	else {
 		for (let i = 0; i < count; i++) {
-			ctx.drawText(`${yaku[i].point}翻`, YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-			ctx.drawText(`${yaku[i].name}`, YAKU_X + 1, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(`${yaku[i].point}翻`, YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 1, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
 		}
 	}
 	if (count < yaku.length) {
 		setTimeout(() => {
 			increment();
-			canvas.update();
+			$.update();
 		}, 1000);
 	}
 	else {
 		setTimeout(() => {
-			canvas.eventDisabled = false;
-			canvas.update();
+			$.eventDisabled = false;
+			$.update();
 		}, 1000)
 	}
 };
 
-const drawScore = (canvas, ctx, {isYakuman, yaku}, count) => {
-	if (canvas.eventDisabled) { return; }
+const drawScore = ({isYakuman, yaku}, count) => {
+	if ($.eventDisabled) { return; }
 	let scoreCount = yaku.reduce((a, b) => a + b.point, 0);
 	if (scoreCount >= 13) {
 		scoreCount = 1;
 		isYakuman = true;
 	}
 	const score = isYakuman
-	? 32000 * scoreCount
-	:	[1000, 2000, 4000, 8000, 8000, 12000, 12000, 16000, 16000, 16000, 24000, 24000][scoreCount - 1];
+		? 32000 * scoreCount
+		:	[1000, 2000, 4000, 8000, 8000, 12000, 12000, 16000, 16000, 16000, 24000, 24000][scoreCount - 1];
 	const SCORE_X = 5;
 	const SCORE_Y = 7.6;
 	const SCORE_SIZE = .8;
-	ctx.drawText(isYakuman? "役満" : `${scoreCount}翻`, SCORE_X, SCORE_Y + .4, {size: SCORE_SIZE / 2});
-	ctx.drawText(`${score}点`, SCORE_X + 2, SCORE_Y, {size: SCORE_SIZE, color: isYakuman? "#f00" : COLOR_STRONG});
+	$.ctx.bbText(isYakuman? "役満" : `${scoreCount}翻`, SCORE_X, SCORE_Y + .4, {size: SCORE_SIZE / 2});
+	$.ctx.bbText(`${score}点`, SCORE_X + 2, SCORE_Y, {size: SCORE_SIZE, color: isYakuman? "#f00" : COLOR_STRONG});
 };
 
 const findYaku = (tiles, cities) => {
