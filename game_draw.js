@@ -7,9 +7,6 @@ const DORA_W = .6;
 const DORA_X = .8;
 const DORA_Y = .5;
 
-const SELECT_BUTTON_RECT = [12.5, 4.2, 2.5, .8];
-const REACH_BUTTON_RECT = [12.5, 5.2, 2.5, .8];
-
 // isDrag: true -> 理牌判定用の領域を計算
 const calcHandRect = (tiles, isDrag) => {
 	const start_x = (16 - HAND_W * tiles.hand.length - .8 * tiles.kans.length * 4) / 2;
@@ -25,6 +22,13 @@ const calcHandRect = (tiles, isDrag) => {
 		}
 	}
 	return rect;
+};
+
+const calcSelectingHandRect = (tiles, isDrag) => {
+	return calcHandRect(tiles, isDrag).map(rect => {
+		const [x, y, w, h] = rect;
+		return [x, 1, w, h];
+	});
 };
 
 const calcDoraRect = (isUradora) => {
@@ -68,6 +72,13 @@ const calcKansRect = () => {
 		}
 	}
 	return rects;
+};
+
+const calcSelectingKansRect = () => {
+	return calcKansRect().map(rects => rects.map(rect => {
+		const [x, y, w, h] = rect;
+		return [x - .4, 1.267, w, h];
+	}));
 };
 
 const drawDora = (tiles) => {

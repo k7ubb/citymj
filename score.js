@@ -4,42 +4,44 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 	let showCount = 1;
 
 	$.addItem([
-		{
+		$.item({
+			disabled: () => $.eventDisabled,
 			rect: [11, 6.6, 4, .8],
-			text: "もう一度遊ぶ",
-			onClick: () => gameScene(configToHandOver)
-		},
-		{
+			radius: .4,
+			draw: function() {
+				const [x, y, w, h] = this.rect;
+				$.ctx.bbFill(this.path, "#ccc"),
+				$.ctx.bbText("もう一度遊ぶ", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+			},
+			onClick: () => gameScene(configToHandOver),
+			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+		}),
+		$.item({
+			disabled: () => $.eventDisabled,
 			rect: [11, 7.6, 4, .8],
-			text: "メニューに戻る",
-			onClick: () => menuScene()
-		}
-	].map(data => $.item({
-		disabled: () => $.eventDisabled,
-		rect: data.rect,
-		radius: .4,
-		draw: function() {
-			const [x, y, w, h] = this.rect;
-			$.ctx.bbFill(this.path, "#ccc"),
-			$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
-		},
-		onClick: data.onClick,
-		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-	})));
+			radius: .4,
+			draw: function() {
+				const [x, y, w, h] = this.rect;
+				$.ctx.bbFill(this.path, "#ccc"),
+				$.ctx.bbText("メニューに戻る", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+			},
+			onClick: () => menuScene(),
+			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+		})
+	]);
 	$.eventDisabled = true;
 
 	$.draw = () => {
-		$.ctx.bbFill($.makePath({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
+		$.ctx.bbFill($.path({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
 		drawCityHands(cities);
 		drawCityNames(cities);
 		drawYaku(yaku, showCount, () => { showCount++; });
 		drawScore( yaku, showCount);
-		$.ctx.bbFill($.makePath({rect: [4.5, 1.8, lineWidth * 2, 6.8]}), COLOR_STRONG)
+		$.ctx.bbFill($.path({rect: [4.5, 1.8, lineWidth * 2, 6.8]}), COLOR_STRONG)
 	};
 
 	$.update();
 };
-
 
 const drawCityHands = (cities) => {
 	const HAND_W = .8;
