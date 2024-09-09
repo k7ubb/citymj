@@ -13,8 +13,8 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 	dialog: $.item({
 		disabled: checkIsSelecting,
 		draw: function() {
-			$.ctx.bbFill($.makePath({rect: [.2, .2, 15.6, 8.6]}), COLOR_STRONG);
-			$.ctx.bbFill($.makePath({rect: [.3, .3, 15.4, 8.4]}), "#fff");
+			$.ctx.bbFill($.path({rect: [.2, .2, 15.6, 8.6]}), COLOR_STRONG);
+			$.ctx.bbFill($.path({rect: [.3, .3, 15.4, 8.4]}), "#fff");
 		}
 	}),
 	closeButton: $.item({
@@ -24,7 +24,7 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 		draw: function(ctx) {
 			const [x, y, w, h] = this.rect
 			$.ctx.bbFill(this.path, "#ccc")
-			$.ctx.bbText("閉じる", x + .25, y + .4, {size: .5, valign: "middle"});
+			$.ctx.bbText("閉じる", x + .25, y + .4, {size: .5, baseline: "middle"});
 		},
 		onClick: function() {
 			unSelect()
@@ -77,7 +77,7 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 		draw: function() {
 			const [x, y, w, h] = this.rect;
 			$.ctx.bbFill(this.path, COLOR_BACKGROUND)
-			$.ctx.bbText("面子を確定", x + .25, y + .4, {size: .5, valign: "middle"});
+			$.ctx.bbText("面子を確定", x + .25, y + .4, {size: .5, baseline: "middle"});
 		},
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 		onClick: function(){
@@ -115,10 +115,10 @@ const selectingOnEvent = (tiles) => {
 		return [x, 1, w, h];
 	});
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath($.makePath({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
 			drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
 			for (let j = 0; j < dragRect.length; j++) {
-				if (i !== j && i + 1 !== j && $.isPointInPath($.makePath({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if (i !== j && i + 1 !== j && $.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 					drawDraggingArrow(dragRect[j]);
 					return;
 				}
@@ -137,9 +137,9 @@ const selectingOnMouseup = (tiles) => {
 		return [x, 1, w, h];
 	});
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath($.makePath({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
 			for (let j = 0; j < dragRect.length; j++) {
-				if ($.isPointInPath($.makePath({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if ($.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 					tiles.replaceHand(i, j);
 					selectngInit();
 					$.update();
@@ -184,7 +184,7 @@ const updateSelectingHandGuide = (tiles, objects) => {
 				}
 			}
 		}
-		objects.selectingGroup[nth].path = $.makePath({rect: objects.selectingGroup[nth].rect, radius: .2});
+		objects.selectingGroup[nth].path = $.path({rect: objects.selectingGroup[nth].rect, radius: .2});
 		objects.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
@@ -241,13 +241,13 @@ const drawSelectingHandGuide = (object) => {
 	if (selectedCities.includes(object.city)) {
 		$.ctx.bbStroke(object.path, COLOR_STRONG, lineWidth * 2);
 	}
-	$.ctx.bbText(object.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", valign: "middle"});
+	$.ctx.bbText(object.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", baseline: "middle"});
 	let nth_mark = 0;
 	for (let content of contents) {
 		if (content.display(object.city)) {
 			const x__ = x + .3 + nth_mark * .35;
 			const y__ = y_ + TEXT_SIZE / 2;
-			$.ctx.bbText(content.getChar(object.city), x__, y__, {size: TEXT_SIZE, align: "center", valign: "middle", color: textColor(object.city.category), style: "bold"});
+			$.ctx.bbText(content.getChar(object.city), x__, y__, {size: TEXT_SIZE, align: "center", baseline: "middle", color: textColor(object.city.category), style: "bold"});
 			nth_mark++;
 		}
 	}

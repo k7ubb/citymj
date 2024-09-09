@@ -21,7 +21,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 		draw: function() {
 			const [x, y, w, h] = this.rect;
 			$.ctx.bbFill(this.path, "#ccc"),
-			$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", valign: "middle"});
+			$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
 		},
 		onClick: data.onClick,
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
