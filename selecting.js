@@ -1,15 +1,12 @@
 "use strict";
 
-const SELECT_CLOSE_BUTTON_RECT = [.5, 7.8, 2, .8];
-const SELECT_WIN_BUTTON_RECT = [12.5, 7.8, 3, .8];
-
 let selectedCities = [];
 
 const selectngInit = () => {
 	selectedCities = [];
 };
 
-const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
+const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 	dialog: $.item({
 		disabled: checkIsSelecting,
 		draw: function() {
@@ -19,33 +16,26 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 	}),
 	closeButton: $.item({
 		disabled: checkIsSelecting,
-		rect: SELECT_CLOSE_BUTTON_RECT,
+		rect: [.5, 7.8, 2, .8],
 		radius: .4,
-		draw: function(ctx) {
-			const [x, y, w, h] = this.rect
+		draw: function() {
+			const [x, y, w, h] = this.rect;
 			$.ctx.bbFill(this.path, "#ccc")
 			$.ctx.bbText("閉じる", x + .25, y + .4, {size: .5, baseline: "middle"});
 		},
 		onClick: function() {
-			unSelect()
+			unSelect();
 			$.update();
 		},
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 	}),
-	selectingHand: calcHandRect(tiles).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	}).map((rect, i) => $.item({
+	hand: calcSelectingHandRect(tiles).map((rect, i) => $.item({
 		disabled: checkIsSelecting,
 		rect,
-		radius: rect[2] * .05,
 		draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 	})),
-	selectingKans: calcKansRect().map(rects => rects.map(rect => {
-		const [x, y, w, h] = rect;
-		return [x - .4, 1.267, w, h];
-	})).map((rects, i) => $.item({
+	kan: calcSelectingKansRect().map((rects, i) => $.item({
 		disabled: checkIsSelecting,
 		draw: function(ctx) {
 			if (tiles.kans[i]) {
@@ -59,7 +49,7 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 		disabled: checkIsSelecting,
 		draw: function() { if (this.path) drawSelectingHandGuide(this) },
 		onHover: function() { if (this.path) $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
-		onClick: async function() {
+		onClick: function() {
 			const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
 			if (selectedCities.includes(citiesLessFourLength[i]) ){
 				selectedCities = selectedCities.filter(x => x !== citiesLessFourLength[i]);
@@ -72,7 +62,7 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 	})),
 	winButton: $.item({
 		disabled: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
-		rect: SELECT_WIN_BUTTON_RECT,
+		rect: [12.5, 7.8, 3, .8],
 		radius: .4,
 		draw: function() {
 			const [x, y, w, h] = this.rect;
@@ -82,11 +72,7 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 		onClick: function(){
 			const cities = selectedCities.map(city_ => {
-				const {
-					position,
-					length,
-					...city
-				} = city_;
+				const { position, length, ...city } = city_;
 				const cityTiles = [];
 				for (let i = city_.position; i < city_.position + city_.length; i++) {
 					cityTiles.push(tiles.hand[i]);
@@ -106,14 +92,8 @@ const selecting = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
 });
 
 const selectingOnEvent = (tiles) => {
-	const handRect = calcHandRect(tiles).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
-	const dragRect = calcHandRect(tiles, true).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
+	const handRect = calcSelectingHandRect(tiles);
+	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
 		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
 			drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
@@ -128,14 +108,8 @@ const selectingOnEvent = (tiles) => {
 };
 
 const selectingOnMouseup = (tiles) => {
-	const handRect = calcHandRect(tiles).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
-	const dragRect = calcHandRect(tiles, true).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
+	const handRect = calcSelectingHandRect(tiles);
+	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
 		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
 			for (let j = 0; j < dragRect.length; j++) {
@@ -144,21 +118,18 @@ const selectingOnMouseup = (tiles) => {
 					selectngInit();
 					$.update();
 					return;
-				};
+				}
 			}
 		}
 	}
 };
 
-const updateSelectingHandGuide = (tiles, objects) => {
+const updateSelectingHandGuide = (tiles, selectingItems) => {
 	const GUIDE_H = 1;
-	const handRect = calcHandRect(tiles).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
+	const handRect = calcSelectingHandRect(tiles);
 	const count = Array(tiles.hand.length).fill().map(() => []);
 	let objectCount = 0;
-	for (let obj of objects.selectingGroup) {
+	for (let obj of selectingItems.selectingGroup) {
 		delete obj.path;
 		delete obj.eventDisabled;
 		delete obj.city;
@@ -168,31 +139,31 @@ const updateSelectingHandGuide = (tiles, objects) => {
 		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 		let line = 0; while(set.includes(line)) { line++; }
 		const nth = objectCount++;
-		objects.selectingGroup[nth].rect = [
+		selectingItems.selectingGroup[nth].rect = [
 			handRect[city.position][0] + .025,
 			handRect[city.position][1] + handRect[city.position][3] + .1 + line * (GUIDE_H + .07),
 			handRect[city.position][2] * city.length - .05,
 			GUIDE_H
 		];
 		if (!selectedCities.includes(city)) {
-			parent: for (let checkCity of selectedCities) {
+			loop: for (let checkCity of selectedCities) {
 				for (let i = checkCity.position; i < checkCity.position + checkCity.length; i++) {
 					if (city.position <= i && i < city.position + city.length) {
-						objects.selectingGroup[nth].eventDisabled = true;
-						break parent;
+						selectingItems.selectingGroup[nth].eventDisabled = true;
+						break loop;
 					}
 				}
 			}
 		}
-		objects.selectingGroup[nth].path = $.path({rect: objects.selectingGroup[nth].rect, radius: .2});
-		objects.selectingGroup[nth].city = city;
+		selectingItems.selectingGroup[nth].path = $.path({rect: selectingItems.selectingGroup[nth].rect, radius: .2});
+		selectingItems.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
 		}
 	}
 };
 
-const drawSelectingHandGuide = (object) => {
+const drawSelectingHandGuide = (item) => {
 	const TEXT_SIZE = .3;
 	const contents = [
 		{
@@ -212,11 +183,11 @@ const drawSelectingHandGuide = (object) => {
 			getChar: () => "島",
 		},
 	];
-	const [x, y, w, h] = object.rect;
+	const [x, y, w, h] = item.rect;
 	const x_ = x + w / 2;
 	const y_ = y + h / 2;
 	const fillColor = (category) => {
-		if (object.eventDisabled) { return "#ccc"; }
+		if (item.eventDisabled) { return "#ccc"; }
 		switch (category) {
 			case "市":
 				return "#9DCCDF";
@@ -227,7 +198,7 @@ const drawSelectingHandGuide = (object) => {
 		}
 	};
 	const textColor = (category) => {
-		if (object.eventDisabled) { return "#999"; }
+		if (item.eventDisabled) { return "#999"; }
 		switch (category) {
 			case "市":
 				return "#000080";
@@ -237,28 +208,25 @@ const drawSelectingHandGuide = (object) => {
 				return "#008000";
 		}
 	};
-	$.ctx.bbFill(object.path, fillColor(object.city.category));
-	if (selectedCities.includes(object.city)) {
-		$.ctx.bbStroke(object.path, COLOR_STRONG, lineWidth * 2);
+	$.ctx.bbFill(item.path, fillColor(item.city.category));
+	if (selectedCities.includes(item.city)) {
+		$.ctx.bbStroke(item.path, COLOR_STRONG, lineWidth * 2);
 	}
-	$.ctx.bbText(object.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", baseline: "middle"});
+	$.ctx.bbText(item.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", baseline: "middle"});
 	let nth_mark = 0;
 	for (let content of contents) {
-		if (content.display(object.city)) {
+		if (content.display(item.city)) {
 			const x__ = x + .3 + nth_mark * .35;
 			const y__ = y_ + TEXT_SIZE / 2;
-			$.ctx.bbText(content.getChar(object.city), x__, y__, {size: TEXT_SIZE, align: "center", baseline: "middle", color: textColor(object.city.category), style: "bold"});
+			$.ctx.bbText(content.getChar(item.city), x__, y__, {size: TEXT_SIZE, align: "center", baseline: "middle", color: textColor(item.city.category), style: "bold"});
 			nth_mark++;
 		}
 	}
 };
 
-const updateSelectingHandRect = (tiles, selectingHand) => {
-	const handRect = calcHandRect(tiles).map(rect => {
-		const [x, y, w, h] = rect;
-		return [x, 1, w, h];
-	});
-	selectingHand.map((hand, i) => {
+const updateSelectingHandRect = (selectingItems, tiles) => {
+	const handRect = calcSelectingHandRect(tiles);
+	selectingItems.hand.map((hand, i) => {
 		if (handRect[i]) { hand.updateRect(handRect[i]); }
 		else { hand.disabled = true; }
 	});

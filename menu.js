@@ -2,7 +2,7 @@
 
 const menuScene = () => {
 	$.reset();
-
+	
 	$.addItem([14, 11, 8].map((handLength, i) => $.item({
 		rect: [4, 4.5 + 1.2 * i, 8, 1],
 		radius: .5,
@@ -14,7 +14,7 @@ const menuScene = () => {
 			$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)");
 		},
 		onClick: function() {
-			gameScene({initialHandLength: handLength});
+			gameScene({handLength, isHandGuideEnabled: false, isCityTableEnabled: false});
 		}
 	})));
 	
