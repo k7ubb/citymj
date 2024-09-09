@@ -84,7 +84,7 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc")
-				$.ctx.bbText("点数計算", x + .25, y + .4, {size: .5, valign: "middle"});
+				$.ctx.bbText("点数計算", x + .25, y + .4, {size: .5, baseline: "middle"});
 			},
 			onClick: function() {
 				selectngInit();
@@ -100,7 +100,7 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc")
-				$.ctx.bbText("リーチ", x + .8, y + .4, {size: .5, valign: "middle"});
+				$.ctx.bbText("リーチ", x + .8, y + .4, {size: .5, baseline: "middle"});
 				drawCheckbox(x + .3, y + .2, isToReach);
 				if (isToReach) {
 					$.ctx.bbText("テンパイしていなくてもリーチ宣言可能です。待ちを確認してリーチしてください。", x + w - 2.5, y, {size: .3, color: "#f00", align: "right"});
@@ -129,7 +129,7 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				drawCheckbox(x + .3, y + .2, config[data.key]);
-				$.ctx.bbText(data.text, x + .8, y + .4, {size: .3, valign: "middle"});
+				$.ctx.bbText(data.text, x + .8, y + .4, {size: .3, baseline: "middle"});
 			},
 			onClick: function() {
 				config[data.key] = !config[data.key];
@@ -148,14 +148,14 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 				text: "メニューに戻る",
 				onClick: () => menuScene()
 			}
-		].map(data => ({
+		].map(data => $.item({
 			disabled: () => !tiles.finished,
 			rect: data.rect,
 			radius: .4,
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc"),
-				$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", valign: "middle"});
+				$.ctx.bbText(data.text, x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
 			},
 			onClick: data.onClick,
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
@@ -167,7 +167,7 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 	}
 
 	$.draw = () => {
-		$.ctx.bbFill($.makePath({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
+		$.ctx.bbFill($.path({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
 		drawDora(tiles)
 		if (config.isHandGuideEnabled) { drawHandGuide(tiles); }
 		if (isSelecting) { updateSelectingHandGuide(tiles, objects); }
@@ -183,12 +183,12 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 			const dragRect = calcHandRect(tiles, true);
 			for (let i = 0; i < handRect.length; i++) {
 				if (
-					$.isPointInPath($.makePath({rect: handRect[i]}), $.startX, $.startY) &&
-					$.isPointInPath($.makePath({rect: [0, handRect[0][1], 16, handRect[0][3]]}), $.mouseX, $.mouseY)
+					$.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY) &&
+					$.isPointInPath($.path({rect: [0, handRect[0][1], 16, handRect[0][3]]}), $.mouseX, $.mouseY)
 				) {
 					drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
 					for (let j = 0; j < dragRect.length; j++) {
-						if (i !== j && i + 1 !== j && $.isPointInPath($.makePath({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+						if (i !== j && i + 1 !== j && $.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 							drawDraggingArrow(dragRect[j]);
 							return;
 						}
@@ -203,9 +203,9 @@ const gameScene = (config = {initialHandLength: 14, isHandGuideEnabled: true, is
 		const handRect = calcHandRect(tiles);
 		const dragRect = calcHandRect(tiles, true);
 		for (let i = 0; i < handRect.length; i++) {
-			if ($.isPointInPath($.makePath({rect: handRect[i]}), $.startX, $.startY)) {
+			if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
 				for (let j = 0; j < dragRect.length; j++) {
-					if ($.isPointInPath($.makePath({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+					if ($.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 						tiles.replaceHand(i, j);
 						$.update();
 						return;
