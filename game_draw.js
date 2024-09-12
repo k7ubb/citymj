@@ -203,7 +203,7 @@ const drawHandGuide = (tiles) => {
 		let line = 0; while(set.includes(line)) { line++; }
 		$.ctx.bbFill($.path({rect: [
 			handRect[city.position][0] + 10,
-			handRect[city.position][1] + handRect[city.position][3] + 10 + line * .1,
+			handRect[city.position][1] + handRect[city.position][3] + 10 + line * 10,
 			handRect[city.position][2] * city.length - 20,
 			5
 		], radius: 2.5}), "#f00");
