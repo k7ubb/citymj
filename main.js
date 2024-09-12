@@ -48,5 +48,4 @@ const $ = new ItemsCanvas(ctx, ctx.convert, ctx.convertBack);
 $.screenRect = [0, 0, 1600, 900];
 const lineWidth = 1;
 ctx.onResize = () => $.update();
-///menuScene();
-gameScene();
+menuScene();
