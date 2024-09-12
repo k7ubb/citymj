@@ -84,12 +84,12 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		})),
 		selectButton: $.item({
 			disabled: () => $.eventDisabled || tiles.finished || isSelecting,
-			rect: [12.5, 4.2, 2.5, .8],
-			radius: .4,
+			rect: [1250, 420, 250, 80],
+			radius: 40,
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc")
-				$.ctx.bbText("点数計算", x + .25, y + .4, {size: .5, baseline: "middle"});
+				$.ctx.bbText("点数計算", x + 25, y + 40, {size: 50, baseline: "middle"});
 			},
 			onClick: function() {
 				selectngInit();
@@ -100,15 +100,15 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		}),
 		reachButton: $.item({
 			disabled: () => tiles.reached || $.eventDisabled || tiles.finished || isSelecting,
-			rect: [12.5, 5.2, 2.5, .8],
-			radius: .4,
+			rect: [1250, 520, 250, 80],
+			radius: 40,
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc")
-				$.ctx.bbText("リーチ", x + .8, y + .4, {size: .5, baseline: "middle"});
-				drawCheckbox(x + .3, y + .2, isToReach);
+				$.ctx.bbText("リーチ", x + 80, y + 40, {size: 50, baseline: "middle"});
+				drawCheckbox(x + 30, y + 20, isToReach);
 				if (isToReach) {
-					$.ctx.bbText("テンパイしていなくてもリーチ宣言可能です。待ちを確認してリーチしてください。", x + w - 2.5, y, {size: .3, color: "#f00", align: "right"});
+					$.ctx.bbText("テンパイしていなくてもリーチ宣言可能です。待ちを確認してリーチしてください。", x + w - 250, y, {size: 30, color: "#f00", align: "right"});
 				}
 			},
 			onClick: function() {
@@ -120,11 +120,11 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		configButtons: [
 			$.item({
 				disabled: () => tiles.finished || isSelecting,
-				rect: [12, 0, 4, .8],
+				rect: [1200, 0, 400, 80],
 				draw: function() {
 					const [x, y, w, h] = this.rect;
-					drawCheckbox(x + .3, y + .2, config.isHandGuideEnabled);
-					$.ctx.bbText("手牌の市町村を表示", x + .8, y + .4, {size: .3, baseline: "middle"});
+					drawCheckbox(x + 30, y + 20, config.isHandGuideEnabled);
+					$.ctx.bbText("手牌の市町村を表示", x + 80, y + 40, {size: 30, baseline: "middle"});
 				},
 				onClick: function() {
 					config.isHandGuideEnabled = !config.isHandGuideEnabled;
@@ -134,11 +134,11 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			}),
 			$.item({
 				disabled: () => tiles.finished || isSelecting,
-				rect: [12, .8, 4, .8],
+				rect: [1200, 80, 400, 80],
 				draw: function() {
 					const [x, y, w, h] = this.rect;
-					drawCheckbox(x + .3, y + .2, config.isCityTableEnabled);
-					$.ctx.bbText("市町村一覧を表示", x + .8, y + .4, {size: .3, baseline: "middle"});
+					drawCheckbox(x + 30, y + 20, config.isCityTableEnabled);
+					$.ctx.bbText("市町村一覧を表示", x + 80, y + 40, {size: 30, baseline: "middle"});
 				},
 				onClick: function() {
 					config.isCityTableEnabled = !config.isCityTableEnabled;
@@ -150,24 +150,24 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		finishedButtons: [
 			$.item({
 				disabled: () => !tiles.finished,
-				rect: [3, 5.8, 4, .8],
-				radius: .4,
+				rect: [300, 580, 400, 80],
+				radius: 40,
 				draw: function() {
 					const [x, y, w, h] = this.rect;
 					$.ctx.bbFill(this.path, "#ccc"),
-					$.ctx.bbText("もう一度遊ぶ", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+					$.ctx.bbText("もう一度遊ぶ", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle"});
 				},
 				onClick: () => gameScene(config),
 				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 			}),
 			$.item({
 				disabled: () => !tiles.finished,
-				rect: [9, 5.8, 4, .8],
-				radius: .4,
+				rect: [900, 580, 400, 80],
+				radius: 40,
 				draw: function() {
 					const [x, y, w, h] = this.rect;
 					$.ctx.bbFill(this.path, "#ccc"),
-					$.ctx.bbText("メニューに戻る", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+					$.ctx.bbText("メニューに戻る", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle"});
 				},
 				onClick: () => menuScene(),
 				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
@@ -184,8 +184,8 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 	}
 
 	$.draw = () => {
-		$.ctx.bbFill($.path({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
-		drawDora(tiles)
+		$.ctx.bbFill($.path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
+		drawDora(tiles);
 		if (config.isHandGuideEnabled) { drawHandGuide(tiles); }
 		if (isSelecting) { updateSelectingHandGuide(tiles, selectingItems); }
 		updateKanDialogRect(tiles, gameItems.kanButton);

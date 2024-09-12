@@ -10,18 +10,18 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 	dialog: $.item({
 		disabled: checkIsSelecting,
 		draw: function() {
-			$.ctx.bbFill($.path({rect: [.2, .2, 15.6, 8.6]}), COLOR_STRONG);
-			$.ctx.bbFill($.path({rect: [.3, .3, 15.4, 8.4]}), "#fff");
+			$.ctx.bbFill($.path({rect: [20, 20, 1560, 860]}), COLOR_STRONG);
+			$.ctx.bbFill($.path({rect: [30, 30, 1540, 840]}), "#fff");
 		}
 	}),
 	closeButton: $.item({
 		disabled: checkIsSelecting,
-		rect: [.5, 7.8, 2, .8],
-		radius: .4,
+		rect: [50, 780, 200, 80],
+		radius: 40,
 		draw: function() {
 			const [x, y, w, h] = this.rect;
 			$.ctx.bbFill(this.path, "#ccc")
-			$.ctx.bbText("閉じる", x + .25, y + .4, {size: .5, baseline: "middle"});
+			$.ctx.bbText("閉じる", x + 25, y + 40, {size: 50, baseline: "middle"});
 		},
 		onClick: function() {
 			unSelect();
@@ -62,12 +62,12 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 	})),
 	winButton: $.item({
 		disabled: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
-		rect: [12.5, 7.8, 3, .8],
-		radius: .4,
+		rect: [1250, 780, 300, 80],
+		radius: 40,
 		draw: function() {
 			const [x, y, w, h] = this.rect;
 			$.ctx.bbFill(this.path, COLOR_BACKGROUND)
-			$.ctx.bbText("面子を確定", x + .25, y + .4, {size: .5, baseline: "middle"});
+			$.ctx.bbText("面子を確定", x + 25, y + 40, {size: 50, baseline: "middle"});
 		},
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 		onClick: function(){
@@ -125,7 +125,7 @@ const selectingOnMouseup = (tiles) => {
 };
 
 const updateSelectingHandGuide = (tiles, selectingItems) => {
-	const GUIDE_H = 1;
+	const GUIDE_H = 100;
 	const handRect = calcSelectingHandRect(tiles);
 	const count = Array(tiles.hand.length).fill().map(() => []);
 	let objectCount = 0;
@@ -140,9 +140,9 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 		let line = 0; while(set.includes(line)) { line++; }
 		const nth = objectCount++;
 		selectingItems.selectingGroup[nth].rect = [
-			handRect[city.position][0] + .025,
-			handRect[city.position][1] + handRect[city.position][3] + .1 + line * (GUIDE_H + .07),
-			handRect[city.position][2] * city.length - .05,
+			handRect[city.position][0] + 2.5,
+			handRect[city.position][1] + handRect[city.position][3] + 10 + line * (GUIDE_H + 7),
+			handRect[city.position][2] * city.length - 5,
 			GUIDE_H
 		];
 		if (!selectedCities.includes(city)) {
@@ -155,7 +155,7 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 				}
 			}
 		}
-		selectingItems.selectingGroup[nth].path = $.path({rect: selectingItems.selectingGroup[nth].rect, radius: .2});
+		selectingItems.selectingGroup[nth].path = $.path({rect: selectingItems.selectingGroup[nth].rect, radius: 20});
 		selectingItems.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
@@ -164,7 +164,7 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 };
 
 const drawSelectingHandGuide = (item) => {
-	const TEXT_SIZE = .3;
+	const TEXT_SIZE = 30;
 	const contents = [
 		{
 			display: () => true,
@@ -216,7 +216,7 @@ const drawSelectingHandGuide = (item) => {
 	let nth_mark = 0;
 	for (let content of contents) {
 		if (content.display(item.city)) {
-			const x__ = x + .3 + nth_mark * .35;
+			const x__ = x + 30 + nth_mark * 35;
 			const y__ = y_ + TEXT_SIZE / 2;
 			$.ctx.bbText(content.getChar(item.city), x__, y__, {size: TEXT_SIZE, align: "center", baseline: "middle", color: textColor(item.city.category), style: "bold"});
 			nth_mark++;
