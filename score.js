@@ -6,24 +6,56 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 	$.addItem([
 		$.item({
 			disabled: () => $.eventDisabled,
-			rect: [11, 6.6, 4, .8],
-			radius: .4,
+			rect: [1100, 460, 400, 80],
+			radius: 40,
+			draw: function() {
+				const [x, y, w, h] = this.rect;
+				$.ctx.bbFill(this.path, "#000"),
+				$.ctx.bbText("Twitter (現𝕏)", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle", color: "#ccc"});
+			},
+			onClick: () => {
+				const handStr = cities.flatMap(city => city.tiles).map(tile => tile.character).join("");
+				open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(handStr)}%20%23%E5%B8%82%E7%94%BA%E6%9D%91%E9%BA%BB%E9%9B%80&url=https%3A%2F%2Fbb.xrea.jp%2Fcitymj%2F`);
+			},
+			onHover: function() { $.ctx.bbFill(this.path, "rgba(255 255 255 / .3)"); }
+		}),
+		$.item({
+			disabled: () => $.eventDisabled,
+			rect: [1100, 560, 400, 80],
+			radius: 40,
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc"),
-				$.ctx.bbText("もう一度遊ぶ", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+				$.ctx.bbText("画像を保存", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle"});
+			},
+			onClick: () => {
+				const a = document.createElement("a");
+				a.href =  $.ctx.canvas.toDataURL("png");
+				a.download = "image.png";
+				a.click();
+			},
+			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+		}),
+		$.item({
+			disabled: () => $.eventDisabled,
+			rect: [1100, 660, 400, 80],
+			radius: 40,
+			draw: function() {
+				const [x, y, w, h] = this.rect;
+				$.ctx.bbFill(this.path, "#ccc"),
+				$.ctx.bbText("もう一度遊ぶ", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle"});
 			},
 			onClick: () => gameScene(configToHandOver),
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
 		$.item({
 			disabled: () => $.eventDisabled,
-			rect: [11, 7.6, 4, .8],
-			radius: .4,
+			rect: [1100, 760, 400, 80],
+			radius: 40,
 			draw: function() {
 				const [x, y, w, h] = this.rect;
 				$.ctx.bbFill(this.path, "#ccc"),
-				$.ctx.bbText("メニューに戻る", x + w / 2, y + .4, {size: .5, align: "center", baseline: "middle"});
+				$.ctx.bbText("メニューに戻る", x + w / 2, y + 40, {size: 50, align: "center", baseline: "middle"});
 			},
 			onClick: () => menuScene(),
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
@@ -32,29 +64,29 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 	$.eventDisabled = true;
 
 	$.draw = () => {
-		$.ctx.bbFill($.path({rect: [0, 0, 16, 9]}), COLOR_BACKGROUND);
+		$.ctx.bbFill($.path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
 		drawCityHands(cities);
 		drawCityNames(cities);
 		drawYaku(yaku, showCount, () => { showCount++; });
 		drawScore( yaku, showCount);
-		$.ctx.bbFill($.path({rect: [4.5, 1.8, lineWidth * 2, 6.8]}), COLOR_STRONG)
+		$.ctx.bbFill($.path({rect: [450, 180, lineWidth * 2, 680]}), COLOR_STRONG)
 	};
 
 	$.update();
 };
 
 const drawCityHands = (cities) => {
-	const HAND_W = .8;
-	const GAP = .1;
+	const HAND_W = 80;
+	const GAP = 10;
 	const tile_length = cities.reduce((a, b) => a + b.tiles.length, 0);
-	const start_x = (16 - HAND_W * tile_length - GAP * (cities.length - 1)) / 2;
+	const start_x = (1600 - HAND_W * tile_length - GAP * (cities.length - 1)) / 2;
 	
 	let nth_tile = 0;
 	for (let i = 0; i < cities.length; i++) {
 		for (let j = 0; j < cities[i].tiles.length; j++) {
 			drawTile([
 				start_x + HAND_W * nth_tile + GAP * i,
-				.5,
+				50,
 				HAND_W,
 				HAND_W * 4 / 3
 			], cities[i].tiles[j]);
@@ -64,28 +96,28 @@ const drawCityHands = (cities) => {
 };
 
 const drawCityNames = (cities) => {
-	const NAME_X = 1;
-	const NAME_Y = 2;
-	const NAME_SIZE = .4;
+	const NAME_X = 100;
+	const NAME_Y = 200;
+	const NAME_SIZE = 40;
 	for (let i = 0; i < cities.length; i++) {
 		$.ctx.bbText(`${cities[i].pref}${cities[i].name}${cities[i].category}`, NAME_X, NAME_Y + i * (NAME_SIZE * 1.5), {size: NAME_SIZE});
 	}
 };
 
 const drawYaku = ({isYakuman, yaku}, count, increment) => {
-	const YAKU_X = 5;
-	const YAKU_Y = 2;
-	const YAKU_SIZE = .4;
+	const YAKU_X = 500;
+	const YAKU_Y = 200;
+	const YAKU_SIZE = 40;
 	if (isYakuman) {
 		for (let i = 0; i < count; i++) {
 			$.ctx.bbText(yaku[i].point === 1? "役満" : "W役満", YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 1.5, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 150, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
 		}
 	}
 	else {
 		for (let i = 0; i < count; i++) {
 			$.ctx.bbText(`${yaku[i].point}翻`, YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 1, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
+			$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 100, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
 		}
 	}
 	if (count < yaku.length) {
@@ -102,7 +134,7 @@ const drawYaku = ({isYakuman, yaku}, count, increment) => {
 	}
 };
 
-const drawScore = ({isYakuman, yaku}, count) => {
+const drawScore = ({isYakuman, yaku}) => {
 	if ($.eventDisabled) { return; }
 	let scoreCount = yaku.reduce((a, b) => a + b.point, 0);
 	if (scoreCount >= 13) {
@@ -112,11 +144,11 @@ const drawScore = ({isYakuman, yaku}, count) => {
 	const score = isYakuman
 		? 32000 * scoreCount
 		:	[1000, 2000, 4000, 8000, 8000, 12000, 12000, 16000, 16000, 16000, 24000, 24000][scoreCount - 1];
-	const SCORE_X = 5;
-	const SCORE_Y = 7.6;
-	const SCORE_SIZE = .8;
-	$.ctx.bbText(isYakuman? "役満" : `${scoreCount}翻`, SCORE_X, SCORE_Y + .4, {size: SCORE_SIZE / 2});
-	$.ctx.bbText(`${score}点`, SCORE_X + 2, SCORE_Y, {size: SCORE_SIZE, color: isYakuman? "#f00" : COLOR_STRONG});
+	const SCORE_X = 500;
+	const SCORE_Y = 760;
+	const SCORE_SIZE = 80;
+	$.ctx.bbText(isYakuman? "役満" : `${scoreCount}翻`, SCORE_X, SCORE_Y + 40, {size: SCORE_SIZE / 2});
+	$.ctx.bbText(`${score}点`, SCORE_X + 200, SCORE_Y, {size: SCORE_SIZE, color: isYakuman? "#f00" : COLOR_STRONG});
 };
 
 const findYaku = (tiles, cities) => {
