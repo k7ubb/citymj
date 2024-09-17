@@ -8,7 +8,6 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 	let isSelecting = false;
 
 	const cutHand = async (i) => {
-		if (IS_SMARTPHONE && config.isCityTableEnabled) { return; }
 		if (!tiles.cutHand(i, isToReach)) { return; } // リーチ後の手出し
 		$.eventDisabled = true;
 		if (isToReach) {
@@ -21,7 +20,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		$.eventDisabled = false;
 		$.update();
 	};
-
+	
 	const execKan = async (i) => {
 		tiles.kan(i);
 		$.eventDisabled = true;
@@ -53,7 +52,10 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			rect,
 			draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
-			onClick: function() { cutHand(i); }
+			onClick: function() {
+				if (IS_SMARTPHONE && config.isCityTableEnabled) { return; }
+				cutHand(i);
+			}
 		})),
 		uradora: calcDoraRect(true).map((rect, i) => $.item({
 			rect,
@@ -191,6 +193,8 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		updateKanDialogRect(tiles, gameItems.kanButton);
 	};
 
+	const trashArea = $.path({rect: [400, 40, 800, 460]});
+
 	$.onEvent = () => {
 		if (config.isCityTableEnabled && !tiles.finished && !isSelecting) {
 			drawCityTableIfNeed(tiles);
@@ -200,12 +204,20 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			const dragRect = calcHandRect(tiles, true);
 			for (let i = 0; i < handRect.length; i++) {
 				if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
-					drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
+					drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX, $.mouseY);
 					for (let j = 0; j < dragRect.length; j++) {
 						if (i !== j && i + 1 !== j && $.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 							drawDraggingArrow(dragRect[j]);
 							return;
 						}
+					}
+					if ($.isPointInPath(trashArea, $.mouseX, $.mouseY)) {
+						$.ctx.bbFill(trashArea, "rgb(0 0 0 / .1)");
+						$.ctx.setLineDash([15, 5]);
+						$.ctx.bbStroke(trashArea, "#000", 4);
+						$.ctx.setLineDash([]);
+						$.ctx.bbText("ドラッグで打牌", 800, 80, {size: 80, align: "center", baseline: "top"});
+						return; 
 					}
 				}
 			}
@@ -224,6 +236,10 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 						$.update();
 						return;
 					}
+				}
+				if ($.isPointInPath(trashArea, $.mouseX, $.mouseY)) {
+					cutHand(i);
+					return;
 				}
 			}
 		}

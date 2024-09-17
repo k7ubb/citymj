@@ -154,9 +154,9 @@ const drawTile = (rect, tile, perspective) => {
 	}
 };
 
-const drawDraggingTile = (rect, tile, mousex) => {
+const drawDraggingTile = (rect, tile, mousex, mousey) => {
 	const [, y, w, h] = rect;
-	drawTile([mousex - w / 2, y - h, w, h], tile);
+	drawTile([mousex - w / 2, mousey? mousey - h / 2 : y - h, w, h], tile);
 };
 
 const drawDraggingArrow = (rect) => {
