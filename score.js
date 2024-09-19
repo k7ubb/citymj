@@ -4,7 +4,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 	let showCount = 1;
 
 	$.addItem([
-		$.item({
+		new Item({
 			disabled: () => $.eventDisabled,
 			rect: [1100, 460, 400, 80],
 			radius: 40,
@@ -19,7 +19,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			},
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(255 255 255 / .3)"); }
 		}),
-		$.item({
+		new Item({
 			disabled: () => $.eventDisabled,
 			rect: [1100, 560, 400, 80],
 			radius: 40,
@@ -36,7 +36,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			},
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
-		$.item({
+		new Item({
 			disabled: () => $.eventDisabled,
 			rect: [1100, 660, 400, 80],
 			radius: 40,
@@ -48,7 +48,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			onClick: () => gameScene(configToHandOver),
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
-		$.item({
+		new Item({
 			disabled: () => $.eventDisabled,
 			rect: [1100, 760, 400, 80],
 			radius: 40,

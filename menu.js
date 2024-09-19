@@ -3,7 +3,7 @@
 const menuScene = () => {
 	$.reset();
 	
-	$.addItem([14, 11, 8].map((handLength, i) => $.item({
+	$.addItem([14, 11, 8].map((handLength, i) => new Item({
 		rect: [400, 450 + 120 * i, 800, 100],
 		radius: 50,
 		draw: function() {
