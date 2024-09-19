@@ -1,33 +1,42 @@
 'use strict';
 
 class Item {
-  #rect;
-  #radius;
-  set rect (r) {
-    this.#rect = r;
-    this.path = ItemsCanvas.prototype.path({
-      rect: this.#rect,
-      radius: this.#radius
-    });
-  }
-  get rect() { return this.#rect; }
-  set radius (r) {
-    this.path = ItemsCanvas.prototype.path({
-      rect: this.#rect,
-      radius: this.#radius
-    });
-  }
-  get radius() { return this.#radius; }
-  constructor({zIndex = 0, ...args} = {}) {
-    this.zIndex = zIndex
-    for (const key of Object.keys(args)) {
-      this[key] = args[key];
-    }
-  }
+	#rect;
+	#radius;
+	
+	set rect(r) {
+		this.#rect = r;
+		this.path = ItemsCanvas.prototype.path({
+			rect: this.#rect,
+			radius: this.#radius
+		});
+	}
+	
+	get rect() {
+		return this.#rect;
+	}
+	
+	set radius(r) {
+		this.path = ItemsCanvas.prototype.path({
+			rect: this.#rect,
+			radius: this.#radius
+		});
+	}
+	
+	get radius() {
+		return this.#radius;
+	}
+	
+	constructor({zIndex = 0, ...args} = {}) {
+		this.zIndex = zIndex;
+		for (const key of Object.keys(args)) {
+			this[key] = args[key];
+		}
+	}
 }
 
 class ItemsCanvas {
-	#eval (arg) {
+	#eval(arg) {
 		return typeof arg === 'function'? arg() : arg;
 	}
 	
@@ -48,7 +57,7 @@ class ItemsCanvas {
 		this.onMouseUp = () => {};
 	}
 	
-	path (arg) {
+	path(arg) {
 		const points = arg.points || [
 			[arg.rect[0], arg.rect[1]],
 			[arg.rect[0], arg.rect[1] + arg.rect[3]],
