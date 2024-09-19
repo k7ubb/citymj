@@ -47,7 +47,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 	};
 	
 	const gameItems = {
-		hand: calcHandRect(tiles).map((rect, i) => $.item({
+		hand: calcHandRect(tiles).map((rect, i) => new Item({
 			eventDisabled: () => tiles.finished || isSelecting,
 			rect,
 			draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
@@ -57,19 +57,19 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 				cutHand(i);
 			}
 		})),
-		uradora: calcDoraRect(true).map((rect, i) => $.item({
+		uradora: calcDoraRect(true).map((rect, i) => new Item({
 			rect,
 			draw: function() { drawTile(this.rect, tiles.uradora[i].tile, "ura"); },
 		})),
-		dora: calcDoraRect().map((rect, i) => $.item({
+		dora: calcDoraRect().map((rect, i) => new Item({
 			rect,
 			draw: function() { drawTile(this.rect, tiles.dora[i].tile, i < tiles.kans.length + 1? "down" : "ura"); },
 		})),
-		trash: calcTrashRect(tiles).map((rect, i) => $.item({
+		trash: calcTrashRect(tiles).map((rect, i) => new Item({
 			rect,
 			draw: function() { drawTile(this.rect, tiles.trash[i], "down"); },
 		})),
-		kan: calcKansRect().map((rects, i) => $.item({
+		kan: calcKansRect().map((rects, i) => new Item({
 			draw: function() {
 				if (tiles.kans[i]) {
 					for (let j = 0; j < 4; j++) {
@@ -78,13 +78,13 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 				}
 			}
 		})),
-		kanButton: new Array(3).fill().map((_, i) => $.item({
+		kanButton: new Array(3).fill().map((_, i) => new Item({
 			disabled: () => tiles.finished || isSelecting,
 			draw: function() { if (this.path) drawKanButton(this); },
 			onHover: function() { if (this.path) drawKanButton(this, true); },
 			onClick: function() { execKan(i); }
 		})),
-		selectButton: $.item({
+		selectButton: new Item({
 			disabled: () => $.eventDisabled || tiles.finished || isSelecting,
 			rect: [1250, 420, 250, 80],
 			radius: 40,
@@ -100,7 +100,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			},
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
-		reachButton: $.item({
+		reachButton: new Item({
 			disabled: () => tiles.reached || $.eventDisabled || tiles.finished || isSelecting,
 			rect: [1250, 520, 250, 80],
 			radius: 40,
@@ -120,7 +120,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
 		configButtons: [
-			$.item({
+			new Item({
 				disabled: () => tiles.finished || isSelecting,
 				rect: [1200, 0, 400, 80],
 				draw: function() {
@@ -134,7 +134,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 				},
 				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 			}),
-			$.item({
+			new Item({
 				disabled: () => tiles.finished || isSelecting,
 				rect: [1200, 80, 400, 80],
 				draw: function() {
@@ -150,7 +150,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			})
 		],
 		finishedButtons: [
-			$.item({
+			new Item({
 				disabled: () => !tiles.finished,
 				rect: [300, 580, 400, 80],
 				radius: 40,
@@ -162,7 +162,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 				onClick: () => gameScene(config),
 				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 			}),
-			$.item({
+			new Item({
 				disabled: () => !tiles.finished,
 				rect: [900, 580, 400, 80],
 				radius: 40,

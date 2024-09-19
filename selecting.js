@@ -7,14 +7,14 @@ const selectngInit = () => {
 };
 
 const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
-	dialog: $.item({
+	dialog: new Item({
 		disabled: checkIsSelecting,
 		draw: function() {
 			$.ctx.bbFill($.path({rect: [20, 20, 1560, 860]}), COLOR_STRONG);
 			$.ctx.bbFill($.path({rect: [30, 30, 1540, 840]}), "#fff");
 		}
 	}),
-	closeButton: $.item({
+	closeButton: new Item({
 		disabled: checkIsSelecting,
 		rect: [50, 780, 200, 80],
 		radius: 40,
@@ -29,13 +29,13 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 		},
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 	}),
-	hand: calcSelectingHandRect(tiles).map((rect, i) => $.item({
+	hand: calcSelectingHandRect(tiles).map((rect, i) => new Item({
 		disabled: checkIsSelecting,
 		rect,
 		draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 	})),
-	kan: calcSelectingKansRect().map((rects, i) => $.item({
+	kan: calcSelectingKansRect().map((rects, i) => new Item({
 		disabled: checkIsSelecting,
 		draw: function(ctx) {
 			if (tiles.kans[i]) {
@@ -45,7 +45,7 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			}
 		}
 	})),
-	selectingGroup: new Array(20).fill().map((_, i) => $.item({
+	selectingGroup: new Array(20).fill().map((_, i) => new Item({
 		disabled: checkIsSelecting,
 		draw: function() { if (this.path) drawSelectingHandGuide(this) },
 		onHover: function() { if (this.path) $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
@@ -60,7 +60,7 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			$.update();
 		}
 	})),
-	winButton: $.item({
+	winButton: new Item({
 		disabled: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
 		rect: [1250, 780, 300, 80],
 		radius: 40,
