@@ -172,31 +172,31 @@ class ItemsCanvas {
 			return [clientX - rect.left, clientY - rect.top];
 		};
 		
-		this.ctx.canvas.addEventListener(isSmartphone? 'touchstart' : 'mousedown', function(event) {
+		this.ctx.canvas.addEventListener(isSmartphone? 'touchstart' : 'mousedown', (event) => {
 			[this.mouseX, this.mouseY] = [this.startX, this.startY] = this.convert(...getOffset(event));
 			this.isMousePress = true;
 			this.#execOnEvent();
-		}.bind(this));
+		});
 		
-		this.ctx.canvas.addEventListener(isSmartphone? 'touchmove' : 'mousemove', function(event) {
+		this.ctx.canvas.addEventListener(isSmartphone? 'touchmove' : 'mousemove', (event) =>{
 			[this.mouseX, this.mouseY] = this.convert(...getOffset(event));
 			this.#execOnEvent();
-		}.bind(this));
+		});
 		
-		this.ctx.canvas.addEventListener(isSmartphone? 'touchend' : 'mouseup', function(event) {
+		this.ctx.canvas.addEventListener(isSmartphone? 'touchend' : 'mouseup', (event) => {
 			this.isMousePress = false;
 			const [mouseX, mouseY] = this.convertBack(this.mouseX, this.mouseY);
 			const [startX, startY] = this.convertBack(this.startX, this.startY);
 			const diff = (mouseX - startX) ** 2 + (mouseY - startY) ** 2;
 			this.#execOnMouseUp(diff < 16);
 			[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
-		}.bind(this));
+		});
 		
 		if (!isSmartphone) {
-			this.ctx.canvas.addEventListener('mouseleave', function(event) {
+			this.ctx.canvas.addEventListener('mouseleave', (event) => {
 				this.isMousePress = false;
 			[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
-			}.bind(this));
+			});
 		}
 	}
 }
