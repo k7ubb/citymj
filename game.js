@@ -34,16 +34,16 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 	};
 
 	const updateTrashRect = (gameItems, tiles) => {
-		calcTrashRect(tiles).map((rect, i) => gameItems.trash[i].updateRect(rect));
+		calcTrashRect(tiles).map((rect, i) => gameItems.trash[i].rect = rect);
 	};
 
 	const updateHandRect = (gameItems, tiles) => {
 		const handRect = calcHandRect(tiles);
 		gameItems.hand.map((hand, i) => {
-			if (handRect[i]) { hand.updateRect(handRect[i]); }
+			if (handRect[i]) { hand.rect = handRect[i]; }
 			else { hand.disabled = true; }
 		});
-		handRect.map((rect, i) => gameItems.hand[i].updateRect(rect));
+		handRect.map((rect, i) => gameItems.hand[i].rect = rect);
 	};
 	
 	const gameItems = {

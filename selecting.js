@@ -227,7 +227,7 @@ const drawSelectingHandGuide = (item) => {
 const updateSelectingHandRect = (selectingItems, tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	selectingItems.hand.map((hand, i) => {
-		if (handRect[i]) { hand.updateRect(handRect[i]); }
+		if (handRect[i]) { hand.rect = handRect[i]; }
 		else { hand.disabled = true; }
 	});
 };
