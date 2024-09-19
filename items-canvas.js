@@ -17,6 +17,7 @@ class Item {
 	}
 	
 	set radius(r) {
+		this.#radius = r;
 		this.path = ItemsCanvas.prototype.path({
 			rect: this.#rect,
 			radius: this.#radius
