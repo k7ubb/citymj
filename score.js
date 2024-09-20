@@ -64,12 +64,12 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 	$.eventDisabled = true;
 
 	$.draw = () => {
-		$.ctx.bbFill($.path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
+		$.ctx.bbFill(new Path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
 		drawCityHands(cities);
 		drawCityNames(cities);
 		drawYaku(yaku, showCount, () => { showCount++; });
 		drawScore( yaku, showCount);
-		$.ctx.bbFill($.path({rect: [450, 180, lineWidth * 2, 680]}), COLOR_STRONG)
+		$.ctx.bbFill(new Path({rect: [450, 180, 2, 680]}), COLOR_STRONG)
 	};
 
 	$.update();

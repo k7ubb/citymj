@@ -10,8 +10,8 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 	dialog: new Item({
 		disabled: checkIsSelecting,
 		draw: function() {
-			$.ctx.bbFill($.path({rect: [20, 20, 1560, 860]}), COLOR_STRONG);
-			$.ctx.bbFill($.path({rect: [30, 30, 1540, 840]}), "#fff");
+			$.ctx.bbFill(new Path({rect: [20, 20, 1560, 860]}), COLOR_STRONG);
+			$.ctx.bbFill(new Path({rect: [30, 30, 1540, 840]}), "#fff");
 		}
 	}),
 	closeButton: new Item({
@@ -95,10 +95,10 @@ const selectingOnEvent = (tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
 			drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
 			for (let j = 0; j < dragRect.length; j++) {
-				if (i !== j && i + 1 !== j && $.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if (i !== j && i + 1 !== j && $.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 					drawDraggingArrow(dragRect[j]);
 					return;
 				}
@@ -111,9 +111,9 @@ const selectingOnMouseup = (tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
 			for (let j = 0; j < dragRect.length; j++) {
-				if ($.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if ($.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 					tiles.replaceHand(i, j);
 					selectngInit();
 					$.update();
@@ -155,7 +155,7 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 				}
 			}
 		}
-		selectingItems.selectingGroup[nth].path = $.path({rect: selectingItems.selectingGroup[nth].rect, radius: 20});
+		selectingItems.selectingGroup[nth].path = new Path({rect: selectingItems.selectingGroup[nth].rect, radius: 20});
 		selectingItems.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
@@ -210,7 +210,7 @@ const drawSelectingHandGuide = (item) => {
 	};
 	$.ctx.bbFill(item.path, fillColor(item.city.category));
 	if (selectedCities.includes(item.city)) {
-		$.ctx.bbStroke(item.path, COLOR_STRONG, lineWidth * 2);
+		$.ctx.bbStroke(item.path, {color: COLOR_STRONG, width: 2});
 	}
 	$.ctx.bbText(item.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", baseline: "middle"});
 	let nth_mark = 0;
