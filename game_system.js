@@ -1,7 +1,4 @@
-// https://camp.trainocate.co.jp/magazine/howto-javascript-sleep/
-const sleep = t => new Promise( resolve => setTimeout(resolve, t) );
-
-const MAX_COUNT = 36;
+const MAX_COUNT = 3;
 
 class GameTiles {
   mountain;

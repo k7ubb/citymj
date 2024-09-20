@@ -1,6 +1,11 @@
 "use strict";
 
-const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTableEnabled: false}) => {
+const gameScene = (config = {
+	handLength: 14,
+	showHandGuide: true,
+	showCityTable: true,
+	restrictRule: false,
+}, isFirstPlay) => {
 	$.reset();
 	const tiles = new GameTiles(config.handLength);
 
@@ -53,7 +58,7 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 			onClick: function() {
-				if (IS_SMARTPHONE && config.isCityTableEnabled) { return; }
+				if (IS_SMARTPHONE && config.showCityTable) { return; }
 				cutHand(i);
 			}
 		})),
@@ -119,36 +124,6 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			},
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
-		configButtons: [
-			new Item({
-				disabled: () => tiles.finished || isSelecting,
-				rect: [1200, 0, 400, 80],
-				draw: function() {
-					const [x, y, w, h] = this.rect;
-					drawCheckbox(x + 30, y + 20, config.isHandGuideEnabled);
-					$.ctx.bbText("手牌の市町村を表示", x + 80, y + 40, {size: 30, baseline: "middle"});
-				},
-				onClick: function() {
-					config.isHandGuideEnabled = !config.isHandGuideEnabled;
-					$.update();
-				},
-				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-			}),
-			new Item({
-				disabled: () => tiles.finished || isSelecting,
-				rect: [1200, 80, 400, 80],
-				draw: function() {
-					const [x, y, w, h] = this.rect;
-					drawCheckbox(x + 30, y + 20, config.isCityTableEnabled);
-					$.ctx.bbText("市町村一覧を表示", x + 80, y + 40, {size: 30, baseline: "middle"});
-				},
-				onClick: function() {
-					config.isCityTableEnabled = !config.isCityTableEnabled;
-					$.update();
-				},
-				onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-			})
-		],
 		finishedButtons: [
 			new Item({
 				disabled: () => !tiles.finished,
@@ -176,6 +151,25 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 			})
 		]
 	};
+
+	if (isFirstPlay) {
+		const messages = !IS_SMARTPHONE
+			? ["ドラッグで理牌", "クリックで打牌"]
+			: ["ドラッグで理牌", "河にドラッグで打牌"];		
+		if (config.showCityTable) {
+			messages.push((!IS_SMARTPHONE? "長押し" : "マウスオーバー") + "で市町村一覧");
+		}
+		$.addItem(new Dialog({
+			rect: [500, 400, 600, 25 + 60 * messages.length],
+			modal: true,
+			draw: function() {
+				for (let i in messages) {
+					$.ctx.bbText(messages[i], 300, 20 + 60 * i, {size: 40, align: "center"});
+				}
+			}
+		}));
+	}
+
 	for (let i in gameItems) {
 		$.addItem(gameItems[i]);
 	}
@@ -186,37 +180,36 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 	}
 
 	$.draw = () => {
-		$.ctx.bbFill($.path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
+		$.ctx.bbFill(new Path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
 		drawDora(tiles);
-		if (config.isHandGuideEnabled) { drawHandGuide(tiles); }
+		if (config.showHandGuide) { drawHandGuide(tiles); }
 		if (isSelecting) { updateSelectingHandGuide(tiles, selectingItems); }
 		updateKanDialogRect(tiles, gameItems.kanButton);
 	};
 
-	const trashArea = $.path({rect: [400, 40, 800, 460]});
+	const trashArea = new Path({rect: [400, 40, 800, 460]});
 
 	$.onEvent = () => {
-		if (config.isCityTableEnabled && !tiles.finished && !isSelecting) {
+		if (config.showCityTable && !tiles.finished && !isSelecting) {
 			drawCityTableIfNeed(tiles);
 		}
 		if (Math.abs($.mouseX - $.startX) > 1) {
 			const handRect = calcHandRect(tiles);
 			const dragRect = calcHandRect(tiles, true);
 			for (let i = 0; i < handRect.length; i++) {
-				if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
+				if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
 					drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX, $.mouseY);
 					for (let j = 0; j < dragRect.length; j++) {
-						if (i !== j && i + 1 !== j && $.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+						if (i !== j && i + 1 !== j && $.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 							drawDraggingArrow(dragRect[j]);
 							return;
 						}
 					}
-					if ($.isPointInPath(trashArea, $.mouseX, $.mouseY)) {
+					if ($.ctx.isScaledPointInPath(trashArea, $.mouseX, $.mouseY)) {
 						$.ctx.bbFill(trashArea, "rgb(0 0 0 / .1)");
 						$.ctx.setLineDash([15, 5]);
-						$.ctx.bbStroke(trashArea, "#000", 4);
+						$.ctx.bbStroke(trashArea, {color: "#000", width: 4});
 						$.ctx.setLineDash([]);
-						$.ctx.bbText("ドラッグで打牌", 800, 80, {size: 80, align: "center", baseline: "top"});
 						return; 
 					}
 				}
@@ -229,15 +222,15 @@ const gameScene = (config = {handLength: 14, isHandGuideEnabled: false, isCityTa
 		const handRect = calcHandRect(tiles);
 		const dragRect = calcHandRect(tiles, true);
 		for (let i = 0; i < handRect.length; i++) {
-			if ($.isPointInPath($.path({rect: handRect[i]}), $.startX, $.startY)) {
+			if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
 				for (let j = 0; j < dragRect.length; j++) {
-					if ($.isPointInPath($.path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+					if ($.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
 						tiles.replaceHand(i, j);
 						$.update();
 						return;
 					}
 				}
-				if ($.isPointInPath(trashArea, $.mouseX, $.mouseY)) {
+				if ($.ctx.isScaledPointInPath(trashArea, $.mouseX, $.mouseY)) {
 					cutHand(i);
 					return;
 				}
