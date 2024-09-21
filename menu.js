@@ -10,31 +10,31 @@ const menuScene = () => {
 		restrictRule: false,
 	};
 	
-	class RadioButton extends Item {
+	class RadioButton {
 		constructor({center, value, get, set, label} = {}) {
 			const width = $.ctx.bbMeasureText(label, {size: 50});
-			super({
+			this.path = {
 				rect: [center.x - 30, center.y - 30, 80 + width, 60],
-				radius: 30,
-				draw: function() {
-					$.ctx.bbText(label, center.x + 40, center.y, {size: 50, baseline: "middle"});
-					$.ctx.bbFill(new Path({center, radius: 30}), "#eee");
-					if (get() === value) {
-						$.ctx.bbFill(new Path({center, radius: 26}), "#fcc");
-						$.ctx.bbStroke(new Path({
-							points: [
-								[center.x + 40, center.y + 30],
-								[center.x + 40 + width, center.y + 30]
-							]
-						}), {width: 2})
-					}
-				},
-				onHover: function() { $.ctx.bbFill(new Path({center, radius: 26}), "rgba(0 0 0 / .3)"); },
-				onClick: () => { 
-					set(value);
-					$.update();
+				radius: 30
+			};
+			this.draw = function() {
+				$.ctx.bbText(label, center.x + 40, center.y, {size: 50, baseline: "middle"});
+				$.ctx.bbFill({center, radius: 30}, "#eee");
+				if (get() === value) {
+					$.ctx.bbFill({center, radius: 26}, "#fcc");
+					$.ctx.bbStroke({
+						points: [
+							[center.x + 40, center.y + 30],
+							[center.x + 40 + width, center.y + 30]
+						]
+					}, {width: 2})
 				}
-			});
+			};
+			this.onHover = function() { $.ctx.bbFill({center, radius: 26}, "rgba(0 0 0 / .3)"); };
+			this.onClick = () => { 
+				set(value);
+				$.update();
+			};
 		}
 	}
 
@@ -70,9 +70,11 @@ const menuScene = () => {
 		label: "OFF"
 	})));
 
-	$.addItem(new Item({
-		rect: [400, 770, 800, 100],
-		radius: 50,
+	$.addItem({
+		path: {
+			rect: [400, 770, 800, 100],
+			radius: 50
+		},
 		draw: function() {
 			$.ctx.bbFill(this.path, "#eee");
 			$.ctx.bbText("START", 800, 820, {size: 50, align: "center", baseline: "middle"});
@@ -83,10 +85,10 @@ const menuScene = () => {
 		onClick: function() {
 			gameScene(config, true);
 		}
-	}));
+	});
 
 	$.draw = () => {
-		$.ctx.bbFill(new Path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
+		$.ctx.bbFill({rect: [0, 0, 1600, 900]}, COLOR_BACKGROUND);
 		$.ctx.bbText("市町村麻雀", 800, 80, {size: 200, align: "center", baseline: "top", style: "bold", color: COLOR_STRONG});
 		$.ctx.bbText(VERSION, 1000, 280, {size: 30, baseline: "top", style: "bold", color: COLOR_STRONG});
 
