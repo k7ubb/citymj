@@ -1,4 +1,4 @@
-const MAX_COUNT = 3;
+const MAX_COUNT = 36;
 
 class GameTiles {
   mountain;
