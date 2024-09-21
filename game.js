@@ -39,16 +39,16 @@ const gameScene = (config = {
 	};
 
 	const updateTrashRect = (gameItems, tiles) => {
-		calcTrashRect(tiles).map((rect, i) => gameItems.trash[i].rect = rect);
+		calcTrashRect(tiles).map((rect, i) => gameItems.trash[i].path.rect = rect);
 	};
 
 	const updateHandRect = (gameItems, tiles) => {
 		const handRect = calcHandRect(tiles);
 		gameItems.hand.map((hand, i) => {
-			if (handRect[i]) { hand.rect = handRect[i]; }
+			if (handRect[i]) { hand.path.rect = handRect[i]; }
 			else { hand.hidden = true; }
 		});
-		handRect.map((rect, i) => gameItems.hand[i].rect = rect);
+		handRect.map((rect, i) => gameItems.hand[i].path.rect = rect);
 	};
 	
 	const gameItems = {
