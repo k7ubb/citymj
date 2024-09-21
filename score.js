@@ -5,7 +5,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 
 	$.addItem([
 		new Item({
-			disabled: () => $.eventDisabled,
+			hidden: () => $.disabled,
 			rect: [1100, 460, 400, 80],
 			radius: 40,
 			draw: function() {
@@ -20,7 +20,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(255 255 255 / .3)"); }
 		}),
 		new Item({
-			disabled: () => $.eventDisabled,
+			hidden: () => $.disabled,
 			rect: [1100, 560, 400, 80],
 			radius: 40,
 			draw: function() {
@@ -37,7 +37,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
 		new Item({
-			disabled: () => $.eventDisabled,
+			hidden: () => $.disabled,
 			rect: [1100, 660, 400, 80],
 			radius: 40,
 			draw: function() {
@@ -49,7 +49,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		}),
 		new Item({
-			disabled: () => $.eventDisabled,
+			hidden: () => $.disabled,
 			rect: [1100, 760, 400, 80],
 			radius: 40,
 			draw: function() {
@@ -61,7 +61,7 @@ const scoreScene = (tiles, cities, configToHandOver) => {
 			onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		})
 	]);
-	$.eventDisabled = true;
+	$.disabled = true;
 
 	$.draw = () => {
 		$.ctx.bbFill(new Path({rect: [0, 0, 1600, 900]}), COLOR_BACKGROUND);
@@ -128,14 +128,14 @@ const drawYaku = ({isYakuman, yaku}, count, increment) => {
 	}
 	else {
 		setTimeout(() => {
-			$.eventDisabled = false;
+			$.disabled = false;
 			$.update();
 		}, 1000)
 	}
 };
 
 const drawScore = ({isYakuman, yaku}) => {
-	if ($.eventDisabled) { return; }
+	if ($.disabled) { return; }
 	let scoreCount = yaku.reduce((a, b) => a + b.point, 0);
 	if (scoreCount >= 13) {
 		scoreCount = 1;

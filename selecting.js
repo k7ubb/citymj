@@ -7,19 +7,21 @@ const selectngInit = () => {
 };
 
 const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
-	dialog: new Item({
-		disabled: checkIsSelecting,
+	dialog: {
+		hidden: checkIsSelecting,
 		draw: function() {
-			$.ctx.bbFill(new Path({rect: [20, 20, 1560, 860]}), COLOR_STRONG);
-			$.ctx.bbFill(new Path({rect: [30, 30, 1540, 840]}), "#fff");
+			$.ctx.bbFill({rect: [20, 20, 1560, 860]}, COLOR_STRONG);
+			$.ctx.bbFill({rect: [30, 30, 1540, 840]}, "#fff");
 		}
-	}),
-	closeButton: new Item({
-		disabled: checkIsSelecting,
-		rect: [50, 780, 200, 80],
-		radius: 40,
+	},
+	closeButton: {
+		hidden: checkIsSelecting,
+		path: {
+			rect: [50, 780, 200, 80],
+			radius: 40
+		},
 		draw: function() {
-			const [x, y, w, h] = this.rect;
+			const [x, y, w, h] = this.path.rect;
 			$.ctx.bbFill(this.path, "#ccc")
 			$.ctx.bbText("閉じる", x + 25, y + 40, {size: 50, baseline: "middle"});
 		},
@@ -28,15 +30,15 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			$.update();
 		},
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-	}),
-	hand: calcSelectingHandRect(tiles).map((rect, i) => new Item({
-		disabled: checkIsSelecting,
-		rect,
-		draw: function() { drawTile(this.rect, tiles.hand[i], "up"); },
+	},
+	hand: calcSelectingHandRect(tiles).map((rect, i) => ({
+		hidden: checkIsSelecting,
+		path: {rect},
+		draw: function() { drawTile(this.path.rect, tiles.hand[i], "up"); },
 		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 	})),
-	kan: calcSelectingKansRect().map((rects, i) => new Item({
-		disabled: checkIsSelecting,
+	kan: calcSelectingKansRect().map((rects, i) => ({
+		hidden: checkIsSelecting,
 		draw: function(ctx) {
 			if (tiles.kans[i]) {
 				for (let j = 0; j < 4; j++) {
@@ -45,8 +47,8 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			}
 		}
 	})),
-	selectingGroup: new Array(20).fill().map((_, i) => new Item({
-		disabled: checkIsSelecting,
+	selectingGroup: new Array(20).fill().map((_, i) => ({
+		hidden: checkIsSelecting,
 		draw: function() { if (this.path) drawSelectingHandGuide(this) },
 		onHover: function() { if (this.path) $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
 		onClick: function() {
@@ -60,12 +62,14 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			$.update();
 		}
 	})),
-	winButton: new Item({
-		disabled: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
-		rect: [1250, 780, 300, 80],
-		radius: 40,
+	winButton: {
+		hidden: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
+		path: {
+			rect: [1250, 780, 300, 80],
+			radius: 40
+		},
 		draw: function() {
-			const [x, y, w, h] = this.rect;
+			const [x, y, w, h] = this.path.rect;
 			$.ctx.bbFill(this.path, COLOR_BACKGROUND)
 			$.ctx.bbText("面子を確定", x + 25, y + 40, {size: 50, baseline: "middle"});
 		},
@@ -88,17 +92,17 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 			}
 			scoreScene(tiles, cities, configToHandOver);
 		}
-	})
+	}
 });
 
 const selectingOnEvent = (tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.isPointInPath({rect: handRect[i]}, $.startX, $.startY)) {
 			drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
 			for (let j = 0; j < dragRect.length; j++) {
-				if (i !== j && i + 1 !== j && $.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if (i !== j && i + 1 !== j && $.isPointInPath({rect: dragRect[j]}, $.mouseX, $.mouseY)) {
 					drawDraggingArrow(dragRect[j]);
 					return;
 				}
@@ -111,9 +115,9 @@ const selectingOnMouseup = (tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	const dragRect = calcSelectingHandRect(tiles, true);
 	for (let i = 0; i < handRect.length; i++) {
-		if ($.ctx.isScaledPointInPath(new Path({rect: handRect[i]}), $.startX, $.startY)) {
+		if ($.isPointInPath({rect: handRect[i]}, $.startX, $.startY)) {
 			for (let j = 0; j < dragRect.length; j++) {
-				if ($.ctx.isScaledPointInPath(new Path({rect: dragRect[j]}), $.mouseX, $.mouseY)) {
+				if ($.isPointInPath({rect: dragRect[j]}, $.mouseX, $.mouseY)) {
 					tiles.replaceHand(i, j);
 					selectngInit();
 					$.update();
@@ -131,7 +135,7 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 	let objectCount = 0;
 	for (let obj of selectingItems.selectingGroup) {
 		delete obj.path;
-		delete obj.eventDisabled;
+		delete obj.disabled;
 		delete obj.city;
 	}
 	const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
@@ -149,13 +153,13 @@ const updateSelectingHandGuide = (tiles, selectingItems) => {
 			loop: for (let checkCity of selectedCities) {
 				for (let i = checkCity.position; i < checkCity.position + checkCity.length; i++) {
 					if (city.position <= i && i < city.position + city.length) {
-						selectingItems.selectingGroup[nth].eventDisabled = true;
+						selectingItems.selectingGroup[nth].disabled = true;
 						break loop;
 					}
 				}
 			}
 		}
-		selectingItems.selectingGroup[nth].path = new Path({rect: selectingItems.selectingGroup[nth].rect, radius: 20});
+		selectingItems.selectingGroup[nth].path = {rect: selectingItems.selectingGroup[nth].rect, radius: 20};
 		selectingItems.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
@@ -187,7 +191,7 @@ const drawSelectingHandGuide = (item) => {
 	const x_ = x + w / 2;
 	const y_ = y + h / 2;
 	const fillColor = (category) => {
-		if (item.eventDisabled) { return "#ccc"; }
+		if (item.disabled) { return "#ccc"; }
 		switch (category) {
 			case "市":
 				return "#9DCCDF";
@@ -198,7 +202,7 @@ const drawSelectingHandGuide = (item) => {
 		}
 	};
 	const textColor = (category) => {
-		if (item.eventDisabled) { return "#999"; }
+		if (item.disabled) { return "#999"; }
 		switch (category) {
 			case "市":
 				return "#000080";
@@ -228,6 +232,6 @@ const updateSelectingHandRect = (selectingItems, tiles) => {
 	const handRect = calcSelectingHandRect(tiles);
 	selectingItems.hand.map((hand, i) => {
 		if (handRect[i]) { hand.rect = handRect[i]; }
-		else { hand.disabled = true; }
+		else { hand.hidden = true; }
 	});
 };
