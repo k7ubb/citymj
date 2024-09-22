@@ -7,9 +7,9 @@
 <link rel="stylesheet" type="text/css" href="app.css">
 <link rel="manifest" href="manifest.json">
 <script src="https://kit.fontawesome.com/3f2884befc.js" crossorigin="anonymous"></script>
-<script src="lib/autoresize.js"></script>
-<script src="lib/items.js"></script>
-<script src="lib/bbcanvas.js"></script>
+<script src="src/lib/autoresize.js"></script>
+<script src="src/lib/items.js"></script>
+<script src="src/lib/bbcanvas.js"></script>
 <title>市町村麻雀練習ツール</title>
 </head>
 
@@ -17,13 +17,17 @@
 <div id="game"></div>
 <a href="../" class="open"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
 
-<script src="menu.js"></script>
+<script src="src/scene/menu.js"></script>
+<script src="src/scene/score.js"></script>
+<script src="src/scene/game.js"></script>
+
+<script src="src/components/common.js"></script>
+<script src="src/components/menu.js"></script>
+<script src="src/components/game.js"></script>
+
 <script src="game_data.js"></script>
 <script src="game_system.js"></script>
-<script src="game_draw.js"></script>
 <script src="selecting.js"></script>
-<script src="score.js"></script>
-<script src="game.js"></script>
 <script src="main.js"></script>
 <script>
 if (!matchMedia("(display-mode: standalone)").matches && location.pathname.includes("app")) {
