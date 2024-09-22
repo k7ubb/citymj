@@ -10,34 +10,6 @@ const menuScene = () => {
 		restrictRule: false,
 	};
 	
-	class RadioButton {
-		constructor({center, value, get, set, label} = {}) {
-			const width = $.ctx.bbMeasureText(label, {size: 50});
-			this.path = {
-				rect: [center.x - 30, center.y - 30, 80 + width, 60],
-				radius: 30
-			};
-			this.draw = function() {
-				$.ctx.bbText(label, center.x + 40, center.y, {size: 50, baseline: "middle"});
-				$.ctx.bbFill({center, radius: 30}, "#eee");
-				if (get() === value) {
-					$.ctx.bbFill({center, radius: 26}, "#fcc");
-					$.ctx.bbStroke({
-						points: [
-							[center.x + 40, center.y + 30],
-							[center.x + 40 + width, center.y + 30]
-						]
-					}, {width: 2})
-				}
-			};
-			this.onHover = function() { $.ctx.bbFill({center, radius: 26}, "rgba(0 0 0 / .3)"); };
-			this.onClick = () => { 
-				set(value);
-				$.update();
-			};
-		}
-	}
-
 	$.addItem([14, 11, 8].map((value, i) => new RadioButton({
 		center: {x: 570 + 260 * i, y: 400},
 		value,
@@ -62,36 +34,25 @@ const menuScene = () => {
 		label: ["ON", "OFF"][i]
 	})));
 
-	$.addItem([false].map((value, i) => new RadioButton({
+	$.addItem([true, false].map((value, i) => new RadioButton({
 		center: {x: 700 + 260 * i, y: 700},
 		value,
 		get: () => config.restrictRule,
 		set: (value) => config.restrictRule = value,
-		label: "OFF"
+		label: ["ON", "OFF"][i]
 	})));
 
-	$.addItem({
-		path: {
-			rect: [400, 770, 800, 100],
-			radius: 50
-		},
-		draw: function() {
-			$.ctx.bbFill(this.path, "#eee");
-			$.ctx.bbText("START", 800, 820, {size: 50, align: "center", baseline: "middle"});
-		},
-		onHover: function() {
-			$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)");
-		},
-		onClick: function() {
-			gameScene(config, true);
-		}
-	});
-
+	$.addItem(new Button({
+		rect: [400, 770, 800, 100],
+		value: "START",
+		onClick: () => gameScene(config, true)
+	}));
+	
 	$.draw = () => {
 		$.ctx.bbFill({rect: [0, 0, 1600, 900]}, COLOR_BACKGROUND);
 		$.ctx.bbText("市町村麻雀", 800, 80, {size: 200, align: "center", baseline: "top", style: "bold", color: COLOR_STRONG});
 		$.ctx.bbText(VERSION, 1000, 280, {size: 30, baseline: "top", style: "bold", color: COLOR_STRONG});
-
+		
 		$.ctx.bbText("牌の枚数:", 300, 400, {color: "#000", size: 40, baseline: "middle"});
 		$.ctx.bbText("手牌ガイド:", 300, 500, {color: "#000", size: 40, baseline: "middle"});
 		$.ctx.bbText("市町村一覧:", 300, 600, {color: "#000", size: 40, baseline: "middle"});

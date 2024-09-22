@@ -1,80 +1,74 @@
-"use strict";
+const selectingItem = {};
+let selectedCities;
+let restrictRule;
 
-let selectedCities = [];
-
-const selectngInit = () => {
-	selectedCities = [];
-};
-
-const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOver) => ({
-	dialog: {
-		hidden: checkIsSelecting,
-		draw: function() {
-			$.ctx.bbFill({rect: [20, 20, 1560, 860]}, COLOR_STRONG);
-			$.ctx.bbFill({rect: [30, 30, 1540, 840]}, "#fff");
+const selectingStart = (tiles, onSelectingEnd, config) => {
+	restrictRule = config.restrictRule;
+	$.addItem(new Dialog({
+		rect: [20, 20, 1560, 860],
+		modal: true,
+		onClose: () => {
+			onSelectingEnd();
+			for (let key of Object.keys(selectingItem)) {
+				$.deleteItem(selectingItem[key]);
+			}
 		}
-	},
-	closeButton: {
-		hidden: checkIsSelecting,
-		path: {
-			rect: [50, 780, 200, 80],
-			radius: 40
+	}));
+	selectedCities = [];
+	selectingItem.dragArea = $.addItem({
+		path: { rect: [0, 0, 1600, 900] },
+		onMousePress: function() {
+			if (($.mouseX - $.startX) ** 2 + ($.mouseY - $.startY) ** 2 < 1000) { return; }
+			const handPosition = calcHandPosition(tiles.hand, tiles.kans);
+			const handDragPosition = calcHandPosition(tiles.hand, tiles.kans, true);
+			for (let i = 0; i < handPosition.length; i++) {
+				if ($.isPointInPath({rect: [handPosition[i], 130, 99, 100 * 4 / 3] }, $.startX, $.startY)) {
+					drawTile([$.mouseX - 50, $.mouseY - 67, 100], tiles.hand[i]);
+					for (let j = 0; j < handDragPosition.length; j++) {
+						if (i === j || i + 1 === j) { continue; }
+						if ($.isPointInPath({rect: [handDragPosition[j], 130, 99, 100 * 4 / 3]}, $.mouseX, $.mouseY)) {
+							const x = handDragPosition[j] + 50;
+							const y = 70;
+							$.ctx.bbFill({points:[ [x, y + 24], [x - 20, y], [x + 20, y]]}, "#cc0");
+							return;
+						}
+					}
+				}
+			}
 		},
-		draw: function() {
-			const [x, y, w, h] = this.path.rect;
-			$.ctx.bbFill(this.path, "#ccc")
-			$.ctx.bbText("閉じる", x + 25, y + 40, {size: 50, baseline: "middle"});
-		},
-		onClick: function() {
-			unSelect();
-			$.update();
-		},
-		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-	},
-	hand: calcSelectingHandRect(tiles).map((rect, i) => ({
-		hidden: checkIsSelecting,
-		path: {rect},
-		draw: function() { drawTile(this.path.rect, tiles.hand[i], "up"); },
-		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
-	})),
-	kan: calcSelectingKansRect().map((rects, i) => ({
-		hidden: checkIsSelecting,
-		draw: function(ctx) {
-			if (tiles.kans[i]) {
-				for (let j = 0; j < 4; j++) {
-					drawTile(rects[j], tiles.kans[i][j]); 
+		onMouseUp: function() {
+			const handPosition = calcHandPosition(tiles.hand, tiles.kans);
+			const handDragPosition = calcHandPosition(tiles.hand, tiles.kans, true);
+			for (let i = 0; i < handPosition.length; i++) {
+				if ($.isPointInPath({rect: [handPosition[i], 130, 99, 100 * 4 / 3] }, $.startX, $.startY)) {
+					for (let j = 0; j < handDragPosition.length; j++) {
+						if ($.isPointInPath({rect: [handDragPosition[j], 130, 99, 100 * 4 / 3]}, $.mouseX, $.mouseY)) {
+							tiles.replaceHand(i, j);
+							$.update();
+							return;
+						}
+					}
 				}
 			}
 		}
-	})),
-	selectingGroup: new Array(20).fill().map((_, i) => ({
-		hidden: checkIsSelecting,
-		draw: function() { if (this.path) drawSelectingHandGuide(this) },
-		onHover: function() { if (this.path) $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
-		onClick: function() {
-			const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
-			if (selectedCities.includes(citiesLessFourLength[i]) ){
-				selectedCities = selectedCities.filter(x => x !== citiesLessFourLength[i]);
+	});
+	selectingItem.drawArea = $.addItem({
+		zIndex: 101,
+		draw: () => {
+			for (let i = 0; i < tiles.kans.length; i++) {
+				const x = 1600 - 41 - 324 * (i + 1) - 8 * i;
+				for (let j = 0; j < 4; j++) {
+					drawTile([x + 81 * j, 157, 81], tiles.kans[i][j]); 
+				}
 			}
-			else {
-				selectedCities.push(citiesLessFourLength[i]);
-			}
-			$.update();
 		}
-	})),
-	winButton: {
-		hidden: () => checkIsSelecting() || selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
-		path: {
-			rect: [1250, 780, 300, 80],
-			radius: 40
-		},
-		draw: function() {
-			const [x, y, w, h] = this.path.rect;
-			$.ctx.bbFill(this.path, COLOR_BACKGROUND)
-			$.ctx.bbText("面子を確定", x + 25, y + 40, {size: 50, baseline: "middle"});
-		},
-		onHover: function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); },
-		onClick: function(){
+	});
+	selectingItem.winButton = $.addItem(new Button({
+		zIndex: 101,
+		disabled: () => selectedCities.reduce((a, b) => a + b.length, 0) !== tiles.hand.length,
+		rect: [1250, 780, 300, 80],
+		value: "面子を確定",
+		onClick: function() {
 			const cities = selectedCities.map(city_ => {
 				const { position, length, ...city } = city_;
 				const cityTiles = [];
@@ -90,148 +84,133 @@ const createSelectingItems = (tiles, checkIsSelecting, unSelect, configToHandOve
 					tiles: kan
 				});
 			}
-			scoreScene(tiles, cities, configToHandOver);
+			scoreScene(tiles, cities, config);
 		}
-	}
-});
-
-const selectingOnEvent = (tiles) => {
-	const handRect = calcSelectingHandRect(tiles);
-	const dragRect = calcSelectingHandRect(tiles, true);
-	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath({rect: handRect[i]}, $.startX, $.startY)) {
-			drawDraggingTile(handRect[i], tiles.hand[i], $.mouseX);
-			for (let j = 0; j < dragRect.length; j++) {
-				if (i !== j && i + 1 !== j && $.isPointInPath({rect: dragRect[j]}, $.mouseX, $.mouseY)) {
-					drawDraggingArrow(dragRect[j]);
-					return;
-				}
-			}
-		}
-	}
+	}));
+	selectingOnUpdateGroup(tiles);
 };
 
-const selectingOnMouseup = (tiles) => {
-	const handRect = calcSelectingHandRect(tiles);
-	const dragRect = calcSelectingHandRect(tiles, true);
-	for (let i = 0; i < handRect.length; i++) {
-		if ($.isPointInPath({rect: handRect[i]}, $.startX, $.startY)) {
-			for (let j = 0; j < dragRect.length; j++) {
-				if ($.isPointInPath({rect: dragRect[j]}, $.mouseX, $.mouseY)) {
-					tiles.replaceHand(i, j);
-					selectngInit();
-					$.update();
-					return;
-				}
+const selectingOnUpdateGroup = (tiles) => {
+	selectedCities = [];
+	const handPosition = calcHandPosition(tiles.hand, tiles.kans);
+	const latestTsumoPosition = tiles.hand.indexOf(tiles.latestTsumo);
+	$.deleteItem(selectingItem.handButtons);
+	selectingItem.handButtons = $.addItem(tiles.hand.map((tile, i) => ({
+		zIndex: 101, // dialogより上
+		path: { rect: [handPosition[i], 130, 99, 100 * 4 / 3] },
+		draw: function() {
+			drawTile(this.path.rect, tile, {perspective: "up"});
+			if (i === latestTsumoPosition) {
+				$.ctx.bbFill({
+					rect: [handPosition[i] + 10, 105, 80, 20],
+					radius: 10
+				}, "#fcc")
+				$.ctx.bbText("ツモ", handPosition[i] + 50, 105, {size: 20, align: "center", style: "bold", color: "#f00"});
+			}
+		},
+		onHover: function() {
+			if (!$.isMousePress) {
+				$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)");
 			}
 		}
-	}
-};
-
-const updateSelectingHandGuide = (tiles, selectingItems) => {
-	const GUIDE_H = 100;
-	const handRect = calcSelectingHandRect(tiles);
-	const count = Array(tiles.hand.length).fill().map(() => []);
-	let objectCount = 0;
-	for (let obj of selectingItems.selectingGroup) {
-		delete obj.path;
-		delete obj.disabled;
-		delete obj.city;
-	}
-	const citiesLessFourLength = tiles.group.filter(city => city.length !== 4);
-	for (let city of citiesLessFourLength) {
+	})));
+	$.deleteItem(selectingItem.cityButtons);
+	const count = Array(handPosition.length).fill().map(() => []);
+	selectingItem.cityButtons = $.addItem(tiles.group.filter(city => city.length !== 4).map(city => {
 		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 		let line = 0; while(set.includes(line)) { line++; }
-		const nth = objectCount++;
-		selectingItems.selectingGroup[nth].rect = [
-			handRect[city.position][0] + 2.5,
-			handRect[city.position][1] + handRect[city.position][3] + 10 + line * (GUIDE_H + 7),
-			handRect[city.position][2] * city.length - 5,
-			GUIDE_H
-		];
-		if (!selectedCities.includes(city)) {
-			loop: for (let checkCity of selectedCities) {
-				for (let i = checkCity.position; i < checkCity.position + checkCity.length; i++) {
-					if (city.position <= i && i < city.position + city.length) {
-						selectingItems.selectingGroup[nth].disabled = true;
-						break loop;
-					}
-				}
-			}
-		}
-		selectingItems.selectingGroup[nth].path = {rect: selectingItems.selectingGroup[nth].rect, radius: 20};
-		selectingItems.selectingGroup[nth].city = city;
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
 		}
+		return createSelectingHandButton(city, [
+			handPosition[city.position] + 2.5,
+			270 + line * 105,
+			100 * city.length - 5,
+			100
+		], latestTsumoPosition);
+	}));
+};
+
+const selectingHandButtonFillColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#9DCCDF";
+		case "町":
+			return "#CC9DDF";
+		case "村":
+			return "#CCDF9D";
 	}
 };
 
-const drawSelectingHandGuide = (item) => {
-	const TEXT_SIZE = 30;
-	const contents = [
-		{
-			display: () => true,
-			getChar: (city) => city.category,
-		},
-		{
-			display: (city) => city.kento,
-			getChar: () => "都",
-		},
-		{
-			display: (city) => city.seirei,
-			getChar: () => "令",
-		},
-		{
-			display: (city) => city.ritou,
-			getChar: () => "島",
-		},
-	];
-	const [x, y, w, h] = item.rect;
-	const x_ = x + w / 2;
-	const y_ = y + h / 2;
-	const fillColor = (category) => {
-		if (item.disabled) { return "#ccc"; }
-		switch (category) {
-			case "市":
-				return "#9DCCDF";
-			case "町":
-				return "#CC9DDF";
-			case "村":
-				return "#CCDF9D";
-		}
-	};
-	const textColor = (category) => {
-		if (item.disabled) { return "#999"; }
-		switch (category) {
-			case "市":
-				return "#000080";
-			case "町":
-				return "#800000";
-			case "村":
-				return "#008000";
-		}
-	};
-	$.ctx.bbFill(item.path, fillColor(item.city.category));
-	if (selectedCities.includes(item.city)) {
-		$.ctx.bbStroke(item.path, {color: COLOR_STRONG, width: 2});
-	}
-	$.ctx.bbText(item.city.pref, x_, y_ - TEXT_SIZE, {size: TEXT_SIZE, align: "center", baseline: "middle"});
-	let nth_mark = 0;
-	for (let content of contents) {
-		if (content.display(item.city)) {
-			const x__ = x + 30 + nth_mark * 35;
-			const y__ = y_ + TEXT_SIZE / 2;
-			$.ctx.bbText(content.getChar(item.city), x__, y__, {size: TEXT_SIZE, align: "center", baseline: "middle", color: textColor(item.city.category), style: "bold"});
-			nth_mark++;
-		}
+const selectingHandButtonTextColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#000080";
+		case "町":
+			return "#800000";
+		case "村":
+			return "#008000";
 	}
 };
 
-const updateSelectingHandRect = (selectingItems, tiles) => {
-	const handRect = calcSelectingHandRect(tiles);
-	selectingItems.hand.map((hand, i) => {
-		if (handRect[i]) { hand.rect = handRect[i]; }
-		else { hand.hidden = true; }
-	});
+const isCityButtonDisabled = (city, latestTsumoPosition) => {
+	if (!restrictRule) { return false; }
+	if (city.position > latestTsumoPosition || latestTsumoPosition > city.position + city.length - 1) {
+		return false;
+	}
+	if (city.length !== 2) {
+		return false;
+	}
+	const tileInHandChar = city.name.replace(city.name[latestTsumoPosition - city.position], "");
+	const tileInHand = TILES.filter(tile => tile.character === tileInHandChar)[0];
+	if (tileInHand.count >= 10) { return true; }
+};
+
+const createSelectingHandButton = (city, rect, latestTsumoPosition) => ({
+	zIndex: 102,
+	path: { rect, radius: 20 },
+	city,
+	draw: function() {
+		const isDisabled = this.disabled || isCityButtonDisabled(city, latestTsumoPosition);
+		$.ctx.bbFill(this.path, isDisabled? "#ccc" : selectingHandButtonFillColor(city.category));
+		if (selectedCities.includes(city)) {
+			$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
+		}
+		const [x, y, w, h] = rect;
+		$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
+		const description = [
+			city.category,
+			...(city.kento? ["都"] : []),
+			...(city.seirei? ["令"] : []),
+			...(city.ritou? ["島"] : [])
+		].join(" ");
+		$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: isDisabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
+		if (isCityButtonDisabled(city, latestTsumoPosition)) {
+			$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
+		}
+	},
+	onClick: function() {
+		if (isCityButtonDisabled(city, latestTsumoPosition)) { return; }
+		if (selectedCities.includes(city)) {
+			selectedCities = selectedCities.filter(_ => _ !== city);
+		}
+		else {
+			selectedCities.push(city);
+		}
+		updateSelectedCitiesStatus();
+		$.update();
+	}
+});
+
+const updateSelectedCitiesStatus = () => {
+	for (const button of selectingItem.cityButtons) {
+		button.disabled = false;
+		if (selectedCities.includes(button.city)) { continue; }
+		for (const city of selectedCities) {
+			if (button.city.position + button.city.length - 1 >= city.position && city.position + city.length - 1 >= button.city.position) {
+				button.disabled = true;
+				break;
+			}
+		}
+	}
 };

@@ -96,7 +96,6 @@ const drawCityHands = (cities) => {
 				start_x + HAND_W * nth_tile + GAP * i,
 				50,
 				HAND_W,
-				HAND_W * 4 / 3
 			], cities[i].tiles[j]);
 			nth_tile++;
 		}
@@ -160,6 +159,7 @@ const drawScore = ({isYakuman, yaku}) => {
 };
 
 const findYaku = (tiles, cities) => {
+	console.log(tiles)
 	const prefCounts = {};
 	const prefs = cities.map(city => city.pref);
 	const prefsInHonshu = ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県']
@@ -168,12 +168,12 @@ const findYaku = (tiles, cities) => {
     else { prefCounts[pref]++; }
 	}
 	const maxRenpaku = Math.max(...Object.values(prefCounts));
-	const maxRenpakuPref = Object.keys(prefCounts).filter(pref => prefCounts[pref] === maxRenpaku).join(",");
+	const maxRenpakuPref = Object.keys(prefCounts).filter(pref => prefCounts[pref] === maxRenpaku).join(", ");
 
 	const doraChar = [];
 	for (let i = 0; i < tiles.kans.length + 1; i++) {
 		doraChar.push(...( tiles.dora[i].char || []) );
-		if (tiles.reached) { doraChar.push(...(tiles.uradora[i].char || [])); } 
+		if (tiles.reachCount !== -1) { doraChar.push(...(tiles.uradora[i].char || [])); } 
 	}
 	const allTiles = [...tiles.hand, ...tiles.kans.flat()];
 	const doraCount = allTiles.filter(tile => doraChar.includes(tile.character)).length + allTiles.filter(tile => tile.red).length;
@@ -215,8 +215,8 @@ const findYaku = (tiles, cities) => {
 	if (tiles.count === 0 && !tiles.isRinshan) {
 		yaku.push({name: "天和", point: 4});
 	}
-	if (tiles.reached) {
-		if (tiles.reactCount === 0) {
+	if (tiles.reachCount !== -1) {
+		if (tiles.reachCount === 0) {
 			yaku.push({name: "二立直", point: 2});
 		}
 		else {
@@ -227,7 +227,7 @@ const findYaku = (tiles, cities) => {
 		yaku.push({name: "嶺上", point: 1});
 	}
 	else {
-		if (tiles.count === tiles.reachCount + 1) {
+		if (tiles.reachCount !== -1 && tiles.count === tiles.reachCount + 1) {
 			yaku.push({name: "一発", point: 1});
 		}
 		if (tiles.count === MAX_COUNT - 1) {

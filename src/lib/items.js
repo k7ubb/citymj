@@ -2,8 +2,8 @@
 
 /*
 	TODO:
-	- リーパイ、打牌のevent処理をItemに入れて、disabledExcludeを廃止したい
 	- onClick処理時、mouseXYとstartXYの両方を見るようにしたい
+	- 不要なItemは削除するようにして、hiddenを廃止したい
 */
 
 class ItemsCanvas {
@@ -44,18 +44,16 @@ class ItemsCanvas {
 		}
 	}
 
-	#items = [];
+	items = [];
 	
 	draw = () => {};
-	drawFinally = () => {};
 	onEvent = () => {};
 	onClick = () => {};
 	onMouseUp = () => {};
 	
 	reset() {
-		this.#items = [];
+		this.items = [];
 		this.draw = () => {};
-		this.drawFinally = () => {};
 		this.onEvent = () => {};
 		this.onClick = () => {};
 		this.onMouseUp = () => {};
@@ -63,19 +61,20 @@ class ItemsCanvas {
 		
 	addItem(arg) {
 		if (Array.isArray(arg)) {
-			for (const item of arg) { this.#items.push(item); }
+			for (const item of arg) { this.items.push(item); }
 		}
 		else {
-			this.#items.push(arg);
+			this.items.push(arg);
 		}
+		return arg;
 	}
 	
 	deleteItem(arg) {
 		if (Array.isArray(arg)) {
-			for (const item of arg) { this.#items = this.#items.filter(_ => _ !== item); }
+			for (const item of arg) { this.items = this.items.filter(_ => _ !== item); }
 		}
 		else {
-			this.#items = this.#items.filter(_ => _ !== arg);
+			this.items = this.items.filter(_ => _ !== arg);
 		}
 	}
 	
@@ -86,12 +85,11 @@ class ItemsCanvas {
 		this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 		this.ctx.restore();
 		this.draw();
-			for (const item of this.#items.sort((a, b) => a.zIndex - b.zIndex)) {
+		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
 			if (!this.#eval(item.hidden) && item.draw) {
 				item.draw();
 			}
 		}
-		this.drawFinally();
 	}
 	
 	update() {
@@ -107,9 +105,11 @@ class ItemsCanvas {
 	startY = -1;
 	
 	#execOnEvent() {
+		if (this.disabled) { return; }
 		this.#execOnUpdate();
-		for (const item of this.#items.sort((a, b) => a.zIndex ?? 0 - b.zIndex ?? 0)) {
-			if (!this.#eval(item.hidden) && !this.#eval(item.disabled) && (!this.disabled || this.#eval(item.disabledExclude)) && item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
+		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
+			if (this.#eval(item.hidden) || this.#eval(item.disabled)) { continue; }
+			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
 				if (item.onHover) { item.onHover(); } 
 				if (this.isMousePress && item.onMousePress) { item.onMousePress(); }
 			}
@@ -118,15 +118,19 @@ class ItemsCanvas {
 	}
 	
 	#execOnMouseUp(isClick) {
+		if (this.disabled) { return; }
 		this.#execOnUpdate();
-		for (const item of this.#items.sort((a, b) => a.zIndex ?? 0 - b.zIndex ?? 0)) {
-			if (!this.#eval(item.hidden) && !this.#eval(item.disabled) && (!this.disabled || this.#eval(item.disabledExclude)) && item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
+		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
+			if (this.#eval(item.hidden) || this.#eval(item.disabled)) { continue; }
+			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
 				if (isClick && item.onClick) { item.onClick(); }
 				if (!isClick && item.onMouseUp) { item.onMouseUp(); }
 			}
 		}
 		if (!this.disabled) { isClick? this.onClick() : this.onMouseUp(); }
 	}
+
+	clickLimit = 16;
 	
 	constructor(ctx, getMouseCoordinates, isPointInPath) {
 		this.ctx = ctx;
@@ -151,7 +155,7 @@ class ItemsCanvas {
 			this.ctx.canvas.addEventListener(isSmartphone? 'touchend' : 'mouseup', (event) => {
 				this.isMousePress = false;
 				const diff = (this.mouseX - this.startX) ** 2 + (this.mouseY - this.startY) ** 2;
-				this.#execOnMouseUp(diff < 16);
+				this.#execOnMouseUp(diff < this.clickLimit);
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
 			});
 			
