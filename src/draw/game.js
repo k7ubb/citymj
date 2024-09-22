@@ -56,11 +56,11 @@ const drawKan = (kans) => {
 	}
 };
 
-const drawHandGuide = (group, handPosition) => {
+const drawHandGuide = (cities, handPosition) => {
 	const count = Array(handPosition.length).fill().map(() => []);
 	let lastPos;
 	let lastCities;
-	for (let city of group) {
+	for (let city of cities) {
 		if (lastPos !== city.position) {
 			lastPos = city.position;
 			lastCities = [];
@@ -96,5 +96,96 @@ const drawCityTable = (hand, character) => {
 	for (let i = 0; i < cities.length; i++) {
 		const isInHand = cities[i].name.split("").map(char => hand.map(tile => tile.character).includes(char)).reduce((a, b) => a && b, true);
 		$.ctx.bbText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE, style: isInHand? "bold" : ""});
+	}
+};
+
+
+// 以下、selecting
+
+const selectingHandButtonFillColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#9DCCDF";
+		case "町":
+			return "#CC9DDF";
+		case "村":
+			return "#CCDF9D";
+	}
+};
+
+const selectingHandButtonTextColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#000080";
+		case "町":
+			return "#800000";
+		case "村":
+			return "#008000";
+	}
+};
+
+const isCityButtonDisabled = (city, latestTsumoPosition, restrictRule) => {
+	if (!restrictRule) { return false; }
+	if (city.position > latestTsumoPosition || latestTsumoPosition > city.position + city.length - 1) {
+		return false;
+	}
+	if (city.length !== 2) {
+		return false;
+	}
+	const tileInHandChar = city.name.replace(city.name[latestTsumoPosition - city.position], "");
+	const tileInHand = TILES.filter(tile => tile.character === tileInHandChar)[0];
+	if (tileInHand.count >= 10) { return true; }
+};
+
+const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingItem, selectedCities, restrictRule) => ({
+	zIndex: 102,
+	path: { rect, radius: 20 },
+	city,
+	disabled: isCityButtonDisabled(city, latestTsumoPosition, restrictRule),
+	draw: function() {
+		$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
+		if (selectedCities.includes(city)) {
+			$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
+		}
+		const [x, y, w, h] = rect;
+		$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
+		const description = [
+			city.category,
+			...(city.kento? ["都"] : []),
+			...(city.seirei? ["令"] : []),
+			...(city.ritou? ["島"] : [])
+		].join(" ");
+		$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
+		if (isCityButtonDisabled(city, latestTsumoPosition, restrictRule)) {
+			$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
+		}
+	},
+	onClick: function() {
+		if (isCityButtonDisabled(city, latestTsumoPosition)) { return; }
+		if (selectedCities.includes(city)) {
+			selectedCities.splice(selectedCities.indexOf(city), 1);
+		}
+		else {
+			selectedCities.push(city);
+		}
+		updateSelectedCitiesStatus(selectingItem, selectedCities, latestTsumoPosition, restrictRule);
+		$.update();
+	}
+});
+
+const updateSelectedCitiesStatus = (selectingItem, selectedCities, latestTsumoPosition, restrictRule) => {
+	for (const button of selectingItem.cityButtons) {
+		if (isCityButtonDisabled(button.city, latestTsumoPosition, restrictRule)) {
+			button.disabled = true;
+			continue;
+		};
+		if (selectedCities.includes(button.city)) { continue; }
+		button.disabled = false;
+		for (const city of selectedCities) {
+			if (button.city.position + button.city.length - 1 >= city.position && city.position + city.length - 1 >= button.city.position) {
+				button.disabled = true;
+				break;
+			}
+		}
 	}
 };

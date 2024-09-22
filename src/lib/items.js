@@ -86,9 +86,7 @@ class ItemsCanvas {
 		this.ctx.restore();
 		this.draw();
 		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
-			if (!this.#eval(item.hidden) && item.draw) {
-				item.draw();
-			}
+			if (item.draw) { item.draw(); }
 		}
 	}
 	
@@ -108,7 +106,7 @@ class ItemsCanvas {
 		if (this.disabled) { return; }
 		this.#execOnUpdate();
 		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
-			if (this.#eval(item.hidden) || this.#eval(item.disabled)) { continue; }
+			if (this.#eval(item.disabled)) { continue; }
 			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
 				if (item.onHover) { item.onHover(); } 
 				if (this.isMousePress && item.onMousePress) { item.onMousePress(); }
@@ -121,7 +119,7 @@ class ItemsCanvas {
 		if (this.disabled) { return; }
 		this.#execOnUpdate();
 		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
-			if (this.#eval(item.hidden) || this.#eval(item.disabled)) { continue; }
+			if (this.#eval(item.disabled)) { continue; }
 			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
 				if (isClick && item.onClick) { item.onClick(); }
 				if (!isClick && item.onMouseUp) { item.onMouseUp(); }
