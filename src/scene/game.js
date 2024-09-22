@@ -5,9 +5,9 @@ const gameScene = (config = {
 	showHandGuide: true,
 	showCityTable: true,
 	restrictRule: false,
-}, isFirstPlay) => {
+}, isFirstPlay, debugMauntain) => {
 	$.reset();
-	const tiles = new GameTiles(config.handLength);
+	const tiles = new GameTiles(config.handLength, debugMauntain);
 	let isReachChecked = false;
 	let isSelecting = false;
 	let isFinished = false;
