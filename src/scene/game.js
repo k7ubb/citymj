@@ -32,7 +32,7 @@ const gameScene = (config = {
 			}
 			if (e.message === "ツモる牌がもうありません (終局)") {
 				isFinished = true;
-				$.deleteItem(kanButtons);
+				$.deleteItem(...kanButtons);
 				$.deleteItem(selectButton);
 				$.deleteItem(reachButton);
 				$.deleteItem(tileDragArea);
@@ -53,32 +53,28 @@ const gameScene = (config = {
 		}
 	};
 	
-	const	selectButton = $.addItem(
-		new Button({
-			rect: [1250, 420, 250, 80],
-			value: "点数計算",
-			onClick: function() {
-				selectingStart();
-			}
-		})
-	);
+	const selectButton = $.addItem(new Button({
+		rect: [1250, 420, 250, 80],
+		value: "点数計算",
+		onClick: function() {
+			selectingStart();
+		}
+	}));
 	
-	const reachButton = $.addItem(
-		new Button({
-			rect: [1250, 520, 250, 80],
-			value: "　リーチ",
-			draw: function([x, y, w, h]) {
-				drawCheckbox(x + 50, y + 24, isReachChecked);
-				if (isReachChecked) {
-					$.ctx.bbText("テンパイしていなくてもリーチ宣言可能です。待ちを確認してリーチしてください。", x + w - 250, y, {size: 30, color: "#f00", align: "right"});
-				}
-			},
-			onClick: function() {
-				isReachChecked = !isReachChecked;
-				$.update();
-			},
-		})
-	);
+	const reachButton = $.addItem(new Button({
+		rect: [1250, 520, 250, 80],
+		value: "　リーチ",
+		draw: function([x, y, w, h]) {
+			drawCheckbox(x + 50, y + 24, isReachChecked);
+			if (isReachChecked) {
+				$.ctx.bbText("テンパイしていなくてもリーチ宣言可能です。待ちを確認してリーチしてください。", x + w - 250, y, {size: 30, color: "#f00", align: "right"});
+			}
+		},
+		onClick: function() {
+			isReachChecked = !isReachChecked;
+			$.update();
+		},
+	}));
 
 	let handButtons = [];
 	let kanButtons = [];
@@ -86,8 +82,8 @@ const gameScene = (config = {
 	game.onUpdateHand = () => {
 		const handPosition = calcHandPosition(game.hand, game.kans);
 		
-		$.deleteItem(handButtons);
-		handButtons = $.addItem(game.hand.filter(x => x).map((tile, i) => ({
+		$.deleteItem(...handButtons);
+		handButtons = $.addItem(...game.hand.filter(x => x).map((tile, i) => ({
 			...(isSelecting
 				? {_disabled: () => isFinished, disabled: true}
 				: {disabled: () => isFinished}
@@ -109,8 +105,8 @@ const gameScene = (config = {
 			}
 		})));
 		
-		$.deleteItem(kanButtons);
-		kanButtons = $.addItem(game.cities.filter(city => city.length === 4).map(city => new Button({
+		$.deleteItem(...kanButtons);
+		kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
 			...(isSelecting && {_disabled: () => isFinished, disabled: true}),
 			rect: [handPosition[city.position] + 10, 620, 380, 40],
 			draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
@@ -129,8 +125,8 @@ const gameScene = (config = {
 			selectedCities = [];
 			const handPosition = calcHandPosition(game.hand, game.kans);
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
-			$.deleteItem(selectingItem.handButtons);
-			selectingItem.handButtons = $.addItem(game.hand.map((tile, i) => ({
+			$.deleteItem(...selectingItem.handButtons);
+			selectingItem.handButtons = $.addItem(...game.hand.map((tile, i) => ({
 				zIndex: 101, // dialogより上
 				path: { rect: [handPosition[i], 130, 99, 100 * 4 / 3] },
 				draw: function() {
@@ -149,9 +145,9 @@ const gameScene = (config = {
 					}
 				}
 			})));
-			$.deleteItem(selectingItem.cityButtons);
+			$.deleteItem(...selectingItem.cityButtons);
 			const count = Array(handPosition.length).fill().map(() => []);
-			selectingItem.cityButtons = $.addItem(game.cities.filter(city => city.length !== 4).map(city => {
+			selectingItem.cityButtons = $.addItem(...game.cities.filter(city => city.length !== 4).map(city => {
 				const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 				let line = 0; while(set.includes(line)) { line++; }
 				for (let i = 0; i < city.length; i++) {
@@ -171,18 +167,21 @@ const gameScene = (config = {
 
 	const selectingStart = () => {
 		isSelecting = true;
-		selectingItem = {};
+		selectingItem = {
+			handButtons: [],
+			cityButtons: []
+		};
 		$.addItem(new Dialog({
 			rect: [20, 20, 1560, 860],
-			modal: true,
 			onClose: () => {
 				isSelecting = false;
 				for (let key of Object.keys(selectingItem)) {
-					$.deleteItem(selectingItem[key]);
+					$.deleteItem(...selectingItem[key]);
 				}
 			}
 		}));
 		selectingItem.dragArea = $.addItem({
+			zIndex: 101,
 			path: { rect: [0, 0, 1600, 900] },
 			onMousePress: function() {
 				if (($.mouseX - $.startX) ** 2 + ($.mouseY - $.startY) ** 2 < 1000) { return; }
@@ -268,7 +267,6 @@ const gameScene = (config = {
 		}
 		$.addItem(new Dialog({
 			rect: [500, 400, 600, 25 + 60 * messages.length],
-			modal: true,
 			draw: function() {
 				for (let i in messages) {
 					$.ctx.bbText(messages[i], 300, 20 + 60 * i, {size: 40, align: "center"});

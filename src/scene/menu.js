@@ -10,7 +10,7 @@ const menuScene = () => {
 		restrictRule: false,
 	};
 	
-	$.addItem([14, 11, 8].map((value, i) => new RadioButton({
+	$.addItem(...[14, 11, 8].map((value, i) => new RadioButton({
 		center: {x: 570 + 260 * i, y: 400},
 		value,
 		get: () => config.handLength,
@@ -18,7 +18,7 @@ const menuScene = () => {
 		label: `${value}枚`
 	})));
 
-	$.addItem([true, false].map((value, i) => new RadioButton({
+	$.addItem(...[true, false].map((value, i) => new RadioButton({
 		center: {x: 570 + 260 * i, y: 500},
 		value,
 		get: () => config.showHandGuide,
@@ -26,7 +26,7 @@ const menuScene = () => {
 		label: ["ON", "OFF"][i]
 	})));
 	
-	$.addItem([true, false].map((value, i) => new RadioButton({
+	$.addItem(...[true, false].map((value, i) => new RadioButton({
 		center: {x: 570 + 260 * i, y: 600},
 		value,
 		get: () => config.showCityTable,
@@ -34,7 +34,7 @@ const menuScene = () => {
 		label: ["ON", "OFF"][i]
 	})));
 
-	$.addItem([true, false].map((value, i) => new RadioButton({
+	$.addItem(...[true, false].map((value, i) => new RadioButton({
 		center: {x: 700 + 260 * i, y: 700},
 		value,
 		get: () => config.restrictRule,
