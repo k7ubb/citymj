@@ -36,7 +36,7 @@ const AutoresizeCanvas = (wrap, w, h, canRotate) => {
 	
 	new ResizeObserver(() => {
 		isRotated = canRotate && w > h !== wrap.clientWidth > wrap.clientHeight;
-		const [w_, h_] = !isRotated? [w, h] : [h, w];
+		const [w_, h_] = isRotated ? [h, w] : [w, h];
 		if (wrap.clientWidth / wrap.clientHeight > w_ / h_) {
 			div.style.width = wrap.clientHeight * w_ / h_ + 'px';
 			div.style.height = wrap.clientHeight + 'px';
@@ -49,11 +49,9 @@ const AutoresizeCanvas = (wrap, w, h, canRotate) => {
 			div.style.top = (wrap.clientHeight - wrap.clientWidth * h_ / w_) / 2 + 'px';
 			div.style.left = 0;
 		}
-		canvas.style.cssText = !isRotated? '' : `
-			transform-origin: left bottom;
-			transform: rotate(90deg) translate(-${div.offsetWidth}px);
-		`;
-		const [width, height] = !isRotated? [div.clientWidth, div.clientHeight] : [div.clientHeight, div.clientWidth];
+		canvas.style.transform = isRotated? `rotate(90deg) translate(-${div.offsetWidth}px)` : '';
+		canvas.style.transformOrigin = isRotated? 'left bottom' : '';
+		const [width, height] = isRotated? [div.clientHeight, div.clientWidth] : [div.clientWidth, div.clientHeight];
 		canvas.width  = width  * devicePixelRatio;
 		canvas.height = height * devicePixelRatio;
 		canvas.style.width  = width  + 'px';

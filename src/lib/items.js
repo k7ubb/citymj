@@ -1,14 +1,8 @@
 'use strict';
 
-/*
-	TODO:
-	- onClick処理時、mouseXYとstartXYの両方を見るようにしたい
-	- 不要なItemは削除するようにして、hiddenを廃止したい
-*/
-
 class ItemsCanvas {
 	#eval(arg) {
-		return typeof arg === 'function'? arg() : arg;
+		return typeof arg === 'function' ? arg() : arg;
 	}
 	
 	#Path = class extends Path2D {
@@ -43,49 +37,38 @@ class ItemsCanvas {
 			this.closePath();
 		}
 	}
-
-	items = [];
 	
+	#items = [];
 	draw = () => {};
 	onEvent = () => {};
 	onClick = () => {};
 	onMouseUp = () => {};
 	
 	reset() {
-		this.items = [];
+		this.#items = [];
 		this.draw = () => {};
 		this.onEvent = () => {};
 		this.onClick = () => {};
 		this.onMouseUp = () => {};
 	}
-		
-	addItem(arg) {
-		if (Array.isArray(arg)) {
-			for (const item of arg) { this.items.push(item); }
-		}
-		else {
-			this.items.push(arg);
-		}
+	
+	addItem(...arg) {
+		for (const item of arg) { this.#items.push(item); }
 		return arg;
 	}
 	
-	deleteItem(arg) {
-		if (Array.isArray(arg)) {
-			for (const item of arg) { this.items = this.items.filter(_ => _ !== item); }
-		}
-		else {
-			this.items = this.items.filter(_ => _ !== arg);
-		}
+	deleteItem(...arg) {
+		for (const item of arg) { this.#items = this.#items.filter(_ => _ !== item); }
 	}
 	
 	#execOnUpdate() {
 		this.ctx.save();
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-		this.ctx.fillStyle = "#ffc";
+		this.ctx.fillStyle = '#ffc';
 		this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 		this.ctx.restore();
 		this.draw();
-		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
+		for (const item of this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
 			if (item.draw) { item.draw(); }
 		}
 	}
@@ -96,6 +79,7 @@ class ItemsCanvas {
 	
 	disabled = false;
 	isMousePress = false;
+	isDragged = false;
 	
 	mouseX = -1;
 	mouseY = -1;
@@ -105,62 +89,70 @@ class ItemsCanvas {
 	#execOnEvent() {
 		if (this.disabled) { return; }
 		this.#execOnUpdate();
-		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
-			if (this.#eval(item.disabled)) { continue; }
-			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
-				if (item.onHover) { item.onHover(); } 
-				if (this.isMousePress && item.onMousePress) { item.onMousePress(); }
+		const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+		const finalIndex = items.findIndex(item => item.final);
+		const startIndex = finalIndex === -1 ? 0 : finalIndex;
+		for (let i = startIndex; i < items.length; i++) {
+			if (this.#eval(items[i].disabled)) { continue; }
+			if (items[i].path && this.isPointInPath(items[i].path, this.mouseX, this.mouseY)) {
+				if (items[i].onHover) { items[i].onHover(); } 
+				if (this.isMousePress && items[i].onMousePress) { items[i].onMousePress(); }
 			}
 		}
 		if (!this.disabled) { this.onEvent(); }
 	}
 	
-	#execOnMouseUp(isClick) {
+	#execOnMouseUp() {
 		if (this.disabled) { return; }
 		this.#execOnUpdate();
-		for (const item of this.items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
-			if (this.#eval(item.disabled)) { continue; }
-			if (item.path && this.isPointInPath(item.path, this.mouseX, this.mouseY)) {
-				if (isClick && item.onClick) { item.onClick(); }
-				if (!isClick && item.onMouseUp) { item.onMouseUp(); }
+		const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+		const finalIndex = items.findIndex(item => item.final);
+		const startIndex = finalIndex === -1 ? 0 : finalIndex;
+		for (let i = startIndex; i < items.length; i++) {
+			if (this.#eval(items[i].disabled)) { continue; }
+			if (items[i].path && this.isPointInPath(items[i].path, this.mouseX, this.mouseY)) {
+				if (this.isDragged && items[i].onMouseUp) { items[i].onMouseUp(); }
+				if (!this.isDragged && items[i].onClick) { items[i].onClick(); }
 			}
 		}
-		if (!this.disabled) { isClick? this.onClick() : this.onMouseUp(); }
+		if (this.isDragged) { this.onMouseUp(); }
+		else { this.onClick(); }
 	}
-
-	clickLimit = 16;
 	
 	constructor(ctx, getMouseCoordinates, isPointInPath) {
 		this.ctx = ctx;
 		this.isPointInPath = isPointInPath
 			? (path, x, y) => isPointInPath(new this.#Path(path), x, y)
 			: (path, x, y) => this.ctx.isPointInPath(new this.#Path(path), x, y);
-
+		
 		if (getMouseCoordinates) {
 			const isSmartphone = 'ontouchstart' in window;
 			
-			this.ctx.canvas.addEventListener(isSmartphone? 'touchstart' : 'mousedown', (event) => {
+			this.ctx.canvas.addEventListener(isSmartphone ? 'touchstart' : 'mousedown', (event) => {
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = getMouseCoordinates(event);
 				this.isMousePress = true;
+				this.isDragged = false;
 				this.#execOnEvent();
 			});
 			
-			this.ctx.canvas.addEventListener(isSmartphone? 'touchmove' : 'mousemove', (event) =>{
+			this.ctx.canvas.addEventListener(isSmartphone ? 'touchmove' : 'mousemove', (event) =>{
 				[this.mouseX, this.mouseY] = getMouseCoordinates(event);
+				this.isDragged = true;
 				this.#execOnEvent();
 			});
 			
-			this.ctx.canvas.addEventListener(isSmartphone? 'touchend' : 'mouseup', (event) => {
+			this.ctx.canvas.addEventListener(isSmartphone ? 'touchend' : 'mouseup', () => {
+				this.#execOnMouseUp();
 				this.isMousePress = false;
-				const diff = (this.mouseX - this.startX) ** 2 + (this.mouseY - this.startY) ** 2;
-				this.#execOnMouseUp(diff < this.clickLimit);
+				this.isDragged = false;
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
 			});
 			
 			if (!isSmartphone) {
-				this.ctx.canvas.addEventListener('mouseleave', (event) => {
+				this.ctx.canvas.addEventListener('mouseleave', () => {
 					this.isMousePress = false;
-				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
+					this.isDragged = false;
+					[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
 				});
 			}
 		}

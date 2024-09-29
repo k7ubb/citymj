@@ -69,7 +69,7 @@
 		}
 		this.restore();
 	};
-
+	
 	CanvasRenderingContext2D.prototype.bbMeasureText = function(text, {size = 14, font = 'sans-serif', style = '', rotate} = {}) {
 		this.save();
 		this.font = `${style} ${size}px ${font}`;

@@ -2,27 +2,19 @@ class Dialog {
   constructor({
     rect,
     draw = () => {},
-    modal = false,
     onClose = () => {}
   } = {}) {
     this.zIndex = 100;
     this.path = {
       rect: [rect[0] + 5, rect[1] + 5, 70, 70],
     };
-    if (modal) {
-      for (let item of $.items) {
-        item.disabled_ = item.disabled;
-        item.disabled = true;
-      }
-    }
+    this.final = true;
     this.draw = function() {
-      if (modal) {
-        $.ctx.save();
-        $.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        $.ctx.fillStyle = "rgba(0 0 0 / .3)";
-        $.ctx.fillRect(0, 0, $.ctx.canvas.width, $.ctx.canvas.height);
-        $.ctx.restore();
-      }
+      $.ctx.save();
+      $.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      $.ctx.fillStyle = "rgba(0 0 0 / .3)";
+      $.ctx.fillRect(0, 0, $.ctx.canvas.width, $.ctx.canvas.height);
+      $.ctx.restore();
       $.ctx.save();
       $.ctx.translate(rect[0], rect[1]);
       $.ctx.bbFill({rect: [0, 0, rect[2], rect[3]]}, COLOR_STRONG);
@@ -45,9 +37,6 @@ class Dialog {
     this.onClick = function() {
       onClose();
       $.deleteItem(this);
-      for (let item of $.items) {
-        item.disabled = item.disabled_;
-      }
       $.update();
     };
   }
@@ -66,11 +55,11 @@ class Button {
       radius: rect[3] / 2
     };
     this.draw = function() {
-      const isDisabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;
+      const disabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;
 			$.ctx.bbFill(this.path, "#eee");
 			if (value) {
-        $.ctx.bbText(value, rect[0] + rect[2] / 2, rect[1] + rect[3] / 2, {size: rect[3] / 2, align: "center", baseline: "middle", color: isDisabled? "#999" : "#000"});
-        if (isDisabled) {
+        $.ctx.bbText(value, rect[0] + rect[2] / 2, rect[1] + rect[3] / 2, {size: rect[3] / 2, align: "center", baseline: "middle", color: disabled? "#999" : "#000"});
+        if (disabled) {
           $.ctx.bbStroke({points: [[rect[0] + 20, rect[1] + rect[3] / 2], [rect[0] + rect[2] - 40, rect[1] + rect[3] / 2]]}, {width: 2, color: "#999"});
         }
       }
