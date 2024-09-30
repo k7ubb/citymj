@@ -2,12 +2,13 @@ const scoreScene = (game, cities, config) => {
 	$.reset();
 	const {yaku, score} = findYaku(game, cities);
 	let showCount = 0;
-
+	
 	$.draw = () => {
 		$.ctx.bbFill({rect: [0, 0, 1600, 900]}, COLOR_BACKGROUND);
 		drawCityHands(cities);
 		drawCityNames(cities);
 		drawYaku(yaku, showCount);
+		drawDora2(game.dora, game.uradora, game.kans.length + 1, game.reachCount !== -1);
 		if (showCount === yaku.length) {
 			$.ctx.bbText(`${score.text}`, 500, 800, {size: 40});
 			$.ctx.bbText(`${score.point}点`, 700, 760, {size: 80, color: score.isYakuman? "#f00" : COLOR_STRONG});
@@ -124,3 +125,34 @@ const drawYaku = (yaku, count) => {
 		$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 150, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
 	}
 };
+
+const drawDora2 = (dora, uradora, doraCount, isReached) => {
+	for (let i = 0; i < 5; i++) {
+		if (!isReached && 0) {
+			drawTile([1200 + 60 * i, 220, 59], uradora[i].tile, {perspective: "ura"});
+		} else {
+			drawTile([1200 + 60 * i, 300, 59], uradora[i].tile, {perspective: i < doraCount? "down" : "ura"});
+		}
+		drawTile([1200 + 60 * i, 200, 59], dora[i].tile, {perspective: i < doraCount? "down" : "ura"});
+	}
+	
+/*
+	dora = dora.filter((d, i) => i < doraCount && d.char);
+	if (dora.length) {
+		const maxWidth = dora.reduce((a, b) => Math.max(a, b.char.length), 0);
+		$.ctx.bbStroke({rect: [80, 182, 24 + 60 * maxWidth, 60 + 84 * dora.length]}, {color: COLOR_STRONG, width: 2});
+		$.ctx.bbText("ドラ", 90, 192, {size: 30, color: COLOR_STRONG, style: "bold"})
+		for (let i = 0; i < dora.length; i++) {
+			for (let j = 0; j < dora[i].char.length; j++) {
+				const tile = { ...TILES.filter(tile => tile.character === dora[i].char[j])[0], red: false };
+				drawTile([60 * j + 90, 84 * i + 232, 59], tile);
+			}
+		}
+	} else {
+		$.ctx.bbStroke({rect: [80, 182, 144, 120]}, {color: COLOR_STRONG, width: 2});
+		$.ctx.bbText("ドラ", 90, 192, {size: 30, color: COLOR_STRONG, style: "bold"})
+		$.ctx.bbText("なし", 90, 232, {size: 60, color: COLOR_STRONG});
+	}
+*/
+};
+

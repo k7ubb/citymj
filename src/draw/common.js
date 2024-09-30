@@ -1,82 +1,110 @@
 class Dialog {
-  constructor({
-    rect,
-    draw = () => {},
-    onClose = () => {}
-  } = {}) {
-    this.zIndex = 100;
-    this.path = {
-      rect: [rect[0] + 5, rect[1] + 5, 70, 70],
-    };
-    this.final = true;
-    this.draw = function() {
-      $.ctx.save();
-      $.ctx.setTransform(1, 0, 0, 1, 0, 0);
-      $.ctx.fillStyle = "rgba(0 0 0 / .3)";
-      $.ctx.fillRect(0, 0, $.ctx.canvas.width, $.ctx.canvas.height);
-      $.ctx.restore();
-      $.ctx.save();
-      $.ctx.translate(rect[0], rect[1]);
-      $.ctx.bbFill({rect: [0, 0, rect[2], rect[3]]}, COLOR_STRONG);
-      $.ctx.bbFill({rect: [5, 5, rect[2] - 10, rect[3] - 10]}, "#fff");
-      draw();
-      $.ctx.restore();
-      $.ctx.bbFill(this.path, "#eee");
-      $.ctx.bbStroke({
-        points: [
-          [rect[0] + 20, rect[1] + 20],
-          [rect[0] + 60, rect[1] + 60],
-          [rect[0] + 40, rect[1] + 40],
-          [rect[0] + 20, rect[1] + 60],
-          [rect[0] + 60, rect[1] + 20],
-          [rect[0] + 40, rect[1] + 40]
-        ]
-      }, {width: 4});
-    };
-    this.onHover = function() {	$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
-    this.onClick = function() {
-      onClose();
-      $.deleteItem(this);
-      $.update();
-    };
-  }
+	constructor({
+		rect,
+		draw = () => {},
+		onClose = () => {}
+	} = {}) {
+		this.zIndex = 100;
+		this.path = {
+			rect: [rect[0] + 5, rect[1] + 5, 70, 70],
+		};
+		this.final = true;
+		this.draw = function() {
+			$.ctx.save();
+			$.ctx.setTransform(1, 0, 0, 1, 0, 0);
+			$.ctx.fillStyle = "rgba(0 0 0 / .3)";
+			$.ctx.fillRect(0, 0, $.ctx.canvas.width, $.ctx.canvas.height);
+			$.ctx.restore();
+			$.ctx.save();
+			$.ctx.translate(rect[0], rect[1]);
+			$.ctx.bbFill({rect: [0, 0, rect[2], rect[3]]}, COLOR_STRONG);
+			$.ctx.bbFill({rect: [5, 5, rect[2] - 10, rect[3] - 10]}, "#fff");
+			draw();
+			$.ctx.restore();
+			$.ctx.bbFill(this.path, "#eee");
+			$.ctx.bbStroke({
+				points: [
+					[rect[0] + 20, rect[1] + 20],
+					[rect[0] + 60, rect[1] + 60],
+					[rect[0] + 40, rect[1] + 40],
+					[rect[0] + 20, rect[1] + 60],
+					[rect[0] + 60, rect[1] + 20],
+					[rect[0] + 40, rect[1] + 40]
+				]
+			}, {width: 4});
+		};
+		this.onHover = function() {	$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
+		this.onClick = function() {
+			onClose();
+			$.deleteItem(this);
+			$.update();
+		};
+	}
 }
 
 class Button {
-  constructor({
-    rect,
-    value,
-    draw,
-    onClick,
-    ...args
-  } = {}) {
-    this.path = {
-      rect,
-      radius: rect[3] / 2
-    };
-    this.draw = function() {
-      const disabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;
+	constructor({
+		rect,
+		value,
+		draw,
+		onClick,
+		...args
+	} = {}) {
+		this.path = {
+			rect,
+			radius: rect[3] / 2
+		};
+		this.draw = function() {
+			const disabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;
 			$.ctx.bbFill(this.path, "#eee");
 			if (value) {
-        $.ctx.bbText(value, rect[0] + rect[2] / 2, rect[1] + rect[3] / 2, {size: rect[3] / 2, align: "center", baseline: "middle", color: disabled? "#999" : "#000"});
-        if (disabled) {
-          $.ctx.bbStroke({points: [[rect[0] + 20, rect[1] + rect[3] / 2], [rect[0] + rect[2] - 40, rect[1] + rect[3] / 2]]}, {width: 2, color: "#999"});
-        }
-      }
-      if (draw) { draw(rect); }
+				$.ctx.bbText(value, rect[0] + rect[2] / 2, rect[1] + rect[3] / 2, {size: rect[3] / 2, align: "center", baseline: "middle", color: disabled? "#999" : "#000"});
+				if (disabled) {
+					$.ctx.bbStroke({points: [[rect[0] + 20, rect[1] + rect[3] / 2], [rect[0] + rect[2] - 40, rect[1] + rect[3] / 2]]}, {width: 2, color: "#999"});
+				}
+			}
+			if (draw) { draw(rect); }
 		};
 		this.onHover = function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
 		this.onClick = onClick;
-    for (let key of Object.keys(args)) {
-      this[key] = args[key];
-    }
-  }
+		for (let key of Object.keys(args)) {
+			this[key] = args[key];
+		}
+	}
+}
+
+class InfoButton {
+	constructor({
+		center,
+		radius,
+		label = "",
+		dialogRect,
+		dialogDraw = () => {}
+	}) {
+		this.path = {
+			center,
+			radius
+		};
+		this.draw = function() {
+			$.ctx.bbFill(this.path, "#999");
+			$.ctx.bbText("?", center.x, center.y, {size: radius * 1.4, style: "bold", align: "center", baseline: "middle", color: "#ccc"});
+			if (label) { $.ctx.bbText(label, center.x + radius * 1.5, center.y, {size: radius * 1.4, baseline: "middle"}); }
+		};
+		this.onHover = function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
+		this.onClick = () => {
+			$.addItem(new Dialog({
+				rect: dialogRect,
+				draw: dialogDraw
+			}));
+			$.update();
+		};
+	}
 }
 
 const drawTile = ([x, y, size], tile, {perspective, rotate} = {}) => {
-  const [w, h] = rotate? [size * 4 / 3, size] : [size, size * 4 / 3];
-  const rect = [x, y, w, h];
-  const radius = size * .05;
+	const [w, h] = rotate? [size * 4 / 3, size] : [size, size * 4 / 3];
+	const rect = [x, y, w, h];
+	const radius = size * .05;
 	if (perspective === "up") {
 		$.ctx.bbFill({rect: [x, y - size * .3, w, h], radius}, COLOR_MAIN);
 		$.ctx.bbFill({rect: [x, y - size * .2, w, h]}, "#fff");
@@ -117,4 +145,18 @@ const drawCheckbox = (x, y, isChecked) => {
 			[x + 2, y + 10],
 		]}, {color: "#f00", width: 4});
 	}
+};
+
+const drawCursor = (x, y, size) => {
+	const points = [
+		[0, 0],
+		[0, 15],
+		[4, 11],
+		[7, 17],
+		[8, 16],
+		[5, 10],
+		[10, 10]
+	].map(([x_, y_]) => [x + x_ * size, y + y_ * size]);
+	$.ctx.bbStroke({points}, {color: "#fff", width: 4});
+	$.ctx.bbFill({points}, "#000");
 };

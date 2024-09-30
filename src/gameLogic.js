@@ -182,10 +182,10 @@ const findYaku = ({
 				name: yaku.name,
 				point: yaku.point === 1? "役満" : "W役満"
 			}))
-		}　: {
+		} : {
 			score: {
 				isYakuman: false,
-				point: [1000, 2000, 4000, 8000, 8000, 12000, 12000, 16000, 16000, 16000, 24000, 24000][Math.min(yakuCount, 13) - 1],
+				point: [1000, 2000, 4000, 8000, 8000, 12000, 12000, 16000, 16000, 16000, 24000, 24000, 32000][Math.min(yakuCount, 13) - 1],
 				text: yakuCount + "翻"
 			},
 			yaku: yaku.map(yaku => ({

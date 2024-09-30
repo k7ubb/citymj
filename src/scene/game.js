@@ -5,7 +5,7 @@ const gameScene = (config = {
 	showHandGuide: true,
 	showCityTable: true,
 	restrictRule: false,
-}, isFirstPlay, debugMauntain) => {
+}, debugMauntain) => {
 	$.reset();
 
 	const game = new Game(config.handLength, debugMauntain);
@@ -255,23 +255,25 @@ const gameScene = (config = {
 		$.update();
 	};
 
-	if (isFirstPlay) {
-		const messages = !IS_SMARTPHONE
-			? ["ドラッグで理牌", "クリックで打牌"]
-			: ["ドラッグで理牌", "河にドラッグで打牌"];		
-		if (config.showCityTable) {
-			messages.push((!IS_SMARTPHONE? "長押し" : "マウスオーバー") + "で市町村一覧");
-		}
-		$.addItem(new Dialog({
-			rect: [500, 400, 600, 25 + 60 * messages.length],
-			draw: function() {
-				for (let i in messages) {
-					$.ctx.bbText(messages[i], 300, 20 + 60 * i, {size: 40, align: "center"});
-				}
+	$.addItem(new InfoButton({
+		center: {x: 1310, y: 370},
+		radius: 20,
+		dialogRect: [550, 300, 500, 300],
+		label: "操作方法",
+		dialogDraw: () => {
+			$.ctx.bbText("操作方法", 250, 20, {size: 40, align: "center"});
+			const messages = !IS_SMARTPHONE
+				? ["ドラッグで理牌", "クリックで打牌"]
+				: ["ドラッグで理牌", "河にドラッグで打牌"];		
+			if (config.showCityTable) {
+				messages.push((!IS_SMARTPHONE? "長押し" : "マウスオーバー") + "で市町村一覧");
 			}
-		}));
-	}
-
+			messages.map((message, i) => {
+				$.ctx.bbText(message, 250, 100 + 60 * i, {size: 40, align: "center"});
+			});
+		}
+	}));
+	
 	const tileDragArea = $.addItem({
 		path: { rect: [0, 0, 1600, 900] },
 		onMousePress: function() {
