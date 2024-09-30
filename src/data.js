@@ -499,7 +499,7 @@ const CITIES = [
 	{"name": "多賀", "category": "町", "pref": "滋賀県"},
 	{"name": "日野", "category": "町", "pref": "滋賀県"},
 	{"name": "豊郷", "category": "町", "pref": "滋賀県"},
-	{"name": "京都", "category": "市", "pref": "京都府", "kento":true},
+	{"name": "京都", "category": "市", "pref": "京都府", "seirei":true, "kento":true},
 	{"name": "宮津", "category": "市", "pref": "京都府"},
 	{"name": "南丹", "category": "市", "pref": "京都府"},
 	{"name": "木津川", "category": "市", "pref": "京都府"},
