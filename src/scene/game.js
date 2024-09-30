@@ -84,10 +84,7 @@ const gameScene = (config = {
 		
 		$.deleteItem(...handButtons);
 		handButtons = $.addItem(...game.hand.filter(x => x).map((tile, i) => ({
-			...(isSelecting
-				? {_disabled: () => isFinished, disabled: true}
-				: {disabled: () => isFinished}
-			),
+			disabled: () => isFinished,
 			path: { rect: [handPosition[i], 700, 99, 100 * 4 / 3] },
 			draw: function() {
 				drawTile(this.path.rect, tile, {perspective: "up"});
@@ -107,7 +104,7 @@ const gameScene = (config = {
 		
 		$.deleteItem(...kanButtons);
 		kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
-			...(isSelecting && {_disabled: () => isFinished, disabled: true}),
+			disabled: () => isFinished,
 			rect: [handPosition[city.position] + 10, 620, 380, 40],
 			draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
 			onClick: async () => {
