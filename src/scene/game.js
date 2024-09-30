@@ -265,8 +265,8 @@ const gameScene = (config = {
 			const messages = !IS_SMARTPHONE
 				? ["ドラッグで理牌", "クリックで打牌"]
 				: ["ドラッグで理牌", "河にドラッグで打牌"];		
-			if (config.showCityTable) {
-				messages.push((!IS_SMARTPHONE? "長押し" : "マウスオーバー") + "で市町村一覧");
+			if (config.showCityTable && IS_SMARTPHONE) {
+				messages.push("長押しで市町村一覧");
 			}
 			messages.map((message, i) => {
 				$.ctx.bbText(message, 250, 100 + 60 * i, {size: 40, align: "center"});
