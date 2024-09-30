@@ -17,10 +17,10 @@ class Game {
 		this.mountain = debugMauntain ?? shuffle(structuredClone(TILES));
 		this.hand = new Array(handLength).fill().map(() => this.mountain.shift());
 
-    const createDora = () => {
-      const tile = this.mountain.shift();
-      return {tile, char: DORA[tile.character]};
-    };
+		const createDora = () => {
+			const tile = this.mountain.shift();
+			return {tile, char: DORA[tile.character]};
+		};
 		this.dora = new Array(5).fill().map(() => createDora());
 		this.uradora = new Array(5).fill().map(() => createDora());
 		this.updateCities();
@@ -54,11 +54,11 @@ class Game {
 		this.updateCities();
 	}
 
-  onUpdateHand = () => {}
+	onUpdateHand = () => {}
 
 	updateCities = () => {
 		this.cities = getCitiesInHand(this.hand);
-    this.onUpdateHand();
+		this.onUpdateHand();
 	};
-
+	
 }
