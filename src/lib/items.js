@@ -20,6 +20,7 @@ class ItemsCanvas {
 				[rect[0] + rect[2], rect[1]]
 			];
 			if (rect && radius) {
+				radius = Math.min(Math.min(rect[2], rect[3]) / 2, radius);
 				this.moveTo(points[0][0] + radius, points[0][1]);
 				this.arc(points[0][0] + radius, points[0][1] + radius, radius, Math.PI * 1.5, Math.PI, true);
 				this.lineTo(points[1][0], points[1][1] - radius);
@@ -118,7 +119,6 @@ class ItemsCanvas {
 			
 			this.ctx.canvas.addEventListener(isSmartphone ? 'touchend' : 'mouseup', () => {
 				if (!this.disabled) {
-					this.update();
 					const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
 					const finalIndex = items.findIndex(item => item.final);
 					const startIndex = finalIndex === -1 ? 0 : finalIndex;
@@ -135,6 +135,7 @@ class ItemsCanvas {
 				this.isMousePress = false;
 				this.isDragged = false;
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
+				this.update();
 			});
 			
 			if (!isSmartphone) {
