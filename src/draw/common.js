@@ -52,7 +52,7 @@ class Button {
 	} = {}) {
 		this.path = {
 			rect,
-			radius: rect[3] / 2
+			radius: Infinity
 		};
 		this.draw = function() {
 			const disabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;

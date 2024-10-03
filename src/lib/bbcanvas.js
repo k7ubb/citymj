@@ -16,6 +16,7 @@
 				[rect[0] + rect[2], rect[1]]
 			];
 			if (rect && radius) {
+				radius = Math.min(Math.min(rect[2], rect[3]) / 2, radius);
 				this.moveTo(points[0][0] + radius, points[0][1]);
 				this.arc(points[0][0] + radius, points[0][1] + radius, radius, Math.PI * 1.5, Math.PI, true);
 				this.lineTo(points[1][0], points[1][1] - radius);

@@ -7,9 +7,9 @@ const COLOR_STRONG = "#000080";
 const sleep = t => new Promise(resolve => setTimeout(resolve, t));
 const shuffle = arr => arr.sort(() => Math.random() - Math.random());
 
-const ctx = AutoresizeCanvas(document.getElementById("game"), 1600, 900, true);
-const $ = new ItemsCanvas(ctx, ctx.getMouseCoordinates, ctx.isScaledPointInPath);
-ctx.onResize = () => $.update();
+const lib = new AutoresizeCanvas(document.getElementById("game"), 1600, 900, true);
+const $ = new ItemsCanvas(lib.context, lib.getMouseCoordinates, lib.isScaledPointInPath);
+lib.onResize = () => $.update();
 
 menuScene();
 /*
