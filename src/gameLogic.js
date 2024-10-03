@@ -26,14 +26,32 @@ const findYaku = ({
 	reachCount,	// リーチした順目 (リーチなし: -1, ダブリー: 0)
 }, cities) => {
 	const prefCounts = {};
+	const chihouCounts = {};
 	const prefs = cities.map(city => city.pref);
 	const prefsInHonshu = ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県']
-	for (let pref of prefs) {
+	const chihous = {
+		"東北地方": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+		"関東地方": ["茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県"],
+		"中部地方": ["山梨県", "長野県", "新潟県", "富山県", "石川県", "福井県", "岐阜県", "静岡県", "愛知県"],
+		"近畿地方": ["三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
+		"中国地方": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+		"四国地方": ["徳島県", "香川県", "愛媛県", "高知県"],
+		"九州地方": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
+	};
+	for (const pref of prefs) {
     if (!(pref in prefCounts)) { prefCounts[pref] = 1; }
     else { prefCounts[pref]++; }
+
+		for (const chihou in chihous) {
+			if (chihous[chihou].includes(pref)) {
+				if (!(chihou in chihouCounts)) { chihouCounts[chihou] = 1; }
+				else { chihouCounts[chihou]++; }
+			}
+		}
 	}
 	const maxRenpaku = Math.max(...Object.values(prefCounts));
 	const maxRenpakuPref = Object.keys(prefCounts).filter(pref => prefCounts[pref] === maxRenpaku).join(", ");
+
 
 	const doraChar = [];
 	for (let i = 0; i < kans.length + 1; i++) {
@@ -156,10 +174,10 @@ const findYaku = ({
 		yaku.push({name: "五県都", point: 6});
 	}
 	if (cities.filter(city => city.ritou).length >= 4) {
-		yaku.push({name: "四離島", point: 3});
+		yaku.push({name: "四離島", point: 6});
 	}
 	if (cities.filter(city => city.name.length === 4).length === 2) {
-		yaku.push({name: "二槓子", point: 3});
+		yaku.push({name: "二槓子", point: 6});
 	}
 	if (maxRenpaku >= 5) {
 		yaku.push({name: `五連泊 (${maxRenpakuPref})`, point: 6});
@@ -167,8 +185,9 @@ const findYaku = ({
 	if (doraCount) {
 		yaku.push({name: `ドラ ${doraCount}`, point: doraCount});
 	}
-
-	// 地一色: 未実装
+	if (Object.keys(chihouCounts).length === 1) {
+		yaku.push({name: `地一色 (${Object.keys(chihouCounts)[0]})`, point: 6});
+	}
 
 	const yakuCount = (yakuman.length? yakuman : yaku).reduce((a, b) => a + b.point, 0);
 
