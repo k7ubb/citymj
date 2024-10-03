@@ -61,7 +61,7 @@ class ItemsCanvas {
 		for (const item of arg) { this.#items = this.#items.filter(_ => _ !== item); }
 	}
 	
-	#execOnUpdate() {
+	update() {
 		this.ctx.save();
 		this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 		this.ctx.fillStyle = '#ffc';
@@ -71,24 +71,8 @@ class ItemsCanvas {
 		for (const item of this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0))) {
 			if (item.draw) { item.draw(); }
 		}
-	}
-	
-	update() {
-		this.#execOnUpdate();
-	}
-	
-	disabled = false;
-	isMousePress = false;
-	isDragged = false;
-	
-	mouseX = -1;
-	mouseY = -1;
-	startX = -1;
-	startY = -1;
-	
-	#execOnEvent() {
 		if (this.disabled) { return; }
-		this.#execOnUpdate();
+		this.onEvent();
 		const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
 		const finalIndex = items.findIndex(item => item.final);
 		const startIndex = finalIndex === -1 ? 0 : finalIndex;
@@ -99,25 +83,16 @@ class ItemsCanvas {
 				if (this.isMousePress && items[i].onMousePress) { items[i].onMousePress(); }
 			}
 		}
-		if (!this.disabled) { this.onEvent(); }
 	}
 	
-	#execOnMouseUp() {
-		if (this.disabled) { return; }
-		this.#execOnUpdate();
-		const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
-		const finalIndex = items.findIndex(item => item.final);
-		const startIndex = finalIndex === -1 ? 0 : finalIndex;
-		for (let i = startIndex; i < items.length; i++) {
-			if (this.#eval(items[i].disabled)) { continue; }
-			if (items[i].path && this.isPointInPath(items[i].path, this.mouseX, this.mouseY)) {
-				if (this.isDragged && items[i].onMouseUp) { items[i].onMouseUp(); }
-				if (!this.isDragged && items[i].onClick) { items[i].onClick(); }
-			}
-		}
-		if (this.isDragged) { this.onMouseUp(); }
-		else { this.onClick(); }
-	}
+	disabled = false;
+	isMousePress = false;
+	isDragged = false;
+	
+	mouseX = -1;
+	mouseY = -1;
+	startX = -1;
+	startY = -1;
 	
 	constructor(ctx, getMouseCoordinates, isPointInPath) {
 		this.ctx = ctx;
@@ -132,17 +107,31 @@ class ItemsCanvas {
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = getMouseCoordinates(event);
 				this.isMousePress = true;
 				this.isDragged = false;
-				this.#execOnEvent();
+				this.update();
 			});
 			
 			this.ctx.canvas.addEventListener(isSmartphone ? 'touchmove' : 'mousemove', (event) =>{
 				[this.mouseX, this.mouseY] = getMouseCoordinates(event);
 				this.isDragged = true;
-				this.#execOnEvent();
+				this.update();
 			});
 			
 			this.ctx.canvas.addEventListener(isSmartphone ? 'touchend' : 'mouseup', () => {
-				this.#execOnMouseUp();
+				if (!this.disabled) {
+					this.update();
+					const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+					const finalIndex = items.findIndex(item => item.final);
+					const startIndex = finalIndex === -1 ? 0 : finalIndex;
+					for (let i = startIndex; i < items.length; i++) {
+						if (this.#eval(items[i].disabled)) { continue; }
+						if (items[i].path && this.isPointInPath(items[i].path, this.mouseX, this.mouseY)) {
+							if (this.isDragged && items[i].onMouseUp) { items[i].onMouseUp(); }
+							if (!this.isDragged && items[i].onClick) { items[i].onClick(); }
+						}
+					}
+					if (this.isDragged) { this.onMouseUp(); }
+					else { this.onClick(); }
+				}
 				this.isMousePress = false;
 				this.isDragged = false;
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
