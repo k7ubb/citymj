@@ -1,5 +1,5 @@
 const IS_SMARTPHONE = "ontouchstart" in window;
-const VERSION = "ver 2.0.2 / 20241003";
+const VERSION = "ver 2.0.3 / 20241008";
 const COLOR_BACKGROUND = "#9DCCDF";
 const COLOR_MAIN = "#6C90C1";
 const COLOR_STRONG = "#000080";
