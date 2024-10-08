@@ -52,7 +52,6 @@ const findYaku = ({
 	const maxRenpaku = Math.max(...Object.values(prefCounts));
 	const maxRenpakuPref = Object.keys(prefCounts).filter(pref => prefCounts[pref] === maxRenpaku).join(", ");
 
-
 	const doraChar = [];
 	for (let i = 0; i < kans.length + 1; i++) {
 		doraChar.push(...( dora[i].char || []) );
@@ -160,7 +159,7 @@ const findYaku = ({
 	if (maxRenpaku === 4) {
 		yaku.push({name: `四連泊 (${maxRenpakuPref})`, point: 4});
 	}
-	if (cities.filter(city => prefsInHonshu.includes(city.pref)).length === 0) {
+	if (cities.filter(city => prefsInHonshu.includes(city.pref)).length === 0 && Object.keys(chihouCounts).length !== 1) {
 		yaku.push({name: "断本州", point: 4});
 	}
 	if (cities.filter(city => city.category !== "村").length === 0) {
@@ -182,13 +181,13 @@ const findYaku = ({
 	if (maxRenpaku >= 5) {
 		yaku.push({name: `五連泊 (${maxRenpakuPref})`, point: 6});
 	}
-	if (doraCount) {
-		yaku.push({name: `ドラ ${doraCount}`, point: doraCount});
-	}
 	if (Object.keys(chihouCounts).length === 1) {
 		yaku.push({name: `地一色 (${Object.keys(chihouCounts)[0]})`, point: 6});
 	}
-
+	if (doraCount) {
+		yaku.push({name: `ドラ ${doraCount}`, point: doraCount});
+	}
+	
 	const yakuCount = (yakuman.length? yakuman : yaku).reduce((a, b) => a + b.point, 0);
 
 	return yakuman.length? {
