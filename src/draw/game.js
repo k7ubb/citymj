@@ -186,6 +186,10 @@ const updateSelectedCitiesStatus = (selectingItem, selectedCities, latestTsumoPo
 				button.disabled = true;
 				break;
 			}
+			if (button.city.name === city.name && button.city.category === city.category && button.city.pref === city.pref) {
+				button.disabled = true;
+				break;
+			}
 		}
 	}
 };
