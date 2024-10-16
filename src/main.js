@@ -5,7 +5,7 @@ const COLOR_MAIN = "#6C90C1";
 const COLOR_STRONG = "#000080";
 
 const sleep = t => new Promise(resolve => setTimeout(resolve, t));
-const shuffle = arr => arr.sort(() => Math.random() - Math.random());
+const shuffle = arr => arr.sort(() => Math.random() - 0.5);
 
 const exact = new ExactCanvas(document.getElementById("game"), 1600, 900, {rotate: true});
 const $ = new ItemsCanvas(
@@ -35,7 +35,7 @@ scoreScene(
 		restrictRule: true,
 	}
 );
-/*
+*/
 gameScene(
 	{
 		handLength: 14,

@@ -3,7 +3,7 @@
 const menuScene = () => {
 	$.reset();
 	
-	let config = {
+	const config = {
 		handLength: 14,
 		showHandGuide: true,
 		showCityTable: true,
@@ -41,7 +41,7 @@ const menuScene = () => {
 		set: (value) => config.restrictRule = value,
 		label: ["ON", "OFF"][i]
 	})));
-
+	
 	$.addItem(new Button({
 		rect: [400, 770, 800, 100],
 		value: "START",
@@ -80,7 +80,7 @@ const menuScene = () => {
 			});
 		}
 	}));
-
+	
 	$.addItem(new InfoButton({
 		center: {x: 250, y: 600},
 		radius: 20,
