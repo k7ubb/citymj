@@ -9,7 +9,7 @@ class Dialog {
 			rect: [rect[0] + 5, rect[1] + 5, 70, 70],
 		};
 		this.final = true;
-		this.draw = function() {
+		this.draw = function({hover}) {
 			$.ctx.save();
 			$.ctx.setTransform(1, 0, 0, 1, 0, 0);
 			$.ctx.fillStyle = "rgba(0 0 0 / .3)";
@@ -22,6 +22,7 @@ class Dialog {
 			draw();
 			$.ctx.restore();
 			$.ctx.bbFill(this.path, "#eee");
+			if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 			$.ctx.bbStroke({
 				points: [
 					[rect[0] + 20, rect[1] + 20],
@@ -33,7 +34,6 @@ class Dialog {
 				]
 			}, {width: 4});
 		};
-		this.onHover = function() {	$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
 		this.onClick = function() {
 			onClose();
 			$.deleteItem(this);
@@ -54,7 +54,7 @@ class Button {
 			rect,
 			radius: Infinity
 		};
-		this.draw = function() {
+		this.draw = function({hover}) {
 			const disabled = typeof this.disabled === 'function'? this.disabled() : this.disabled;
 			$.ctx.bbFill(this.path, "#eee");
 			if (value) {
@@ -64,12 +64,42 @@ class Button {
 				}
 			}
 			if (draw) { draw(rect); }
+			if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 		};
-		this.onHover = function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
 		this.onClick = onClick;
 		for (let key of Object.keys(args)) {
 			this[key] = args[key];
 		}
+	}
+}
+
+class RadioButton {
+	constructor({center, value, get, set, label} = {}) {
+		const width = $.ctx.bbMeasureText(label, {size: 50});
+		this.path = {
+			rect: [center.x - 30, center.y - 30, 80 + width, 60],
+			radius: 30
+		};
+		this.draw = function({hover}) {
+			$.ctx.bbText(label, center.x + 40, center.y, {size: 50, baseline: "middle"});
+			$.ctx.bbFill({center, radius: 30}, "#eee");
+			if (get() === value) {
+				$.ctx.bbFill({center, radius: 26}, "#fcc");
+				$.ctx.bbStroke({
+					points: [
+						[center.x + 40, center.y + 30],
+						[center.x + 40 + width, center.y + 30]
+					]
+				}, {width: 2});
+			}
+			if (hover) {
+				$.ctx.bbFill({center, radius: 26}, "rgba(0 0 0 / .3)");
+			}
+		};
+		this.onClick = () => { 
+			set(value);
+			$.update();
+		};
 	}
 }
 
@@ -85,12 +115,12 @@ class InfoButton {
 			center,
 			radius
 		};
-		this.draw = function() {
+		this.draw = function({hover}) {
 			$.ctx.bbFill(this.path, "#999");
+			if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
 			$.ctx.bbText("?", center.x, center.y, {size: radius * 1.4, style: "bold", align: "center", baseline: "middle", color: "#ccc"});
 			if (label) { $.ctx.bbText(label, center.x + radius * 1.5, center.y, {size: radius * 1.4, baseline: "middle"}); }
 		};
-		this.onHover = function() { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); };
 		this.onClick = () => {
 			$.addItem(new Dialog({
 				rect: dialogRect,
