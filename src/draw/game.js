@@ -1,3 +1,76 @@
+class HandItem {
+	hand = [];
+	sortAreas = [];
+	kanButtons = [];
+
+	destructor() {
+		$.deleteItem(...this.hand);
+		$.deleteItem(...this.sortAreas);
+		$.deleteItem(...this.kanButtons);
+	}
+
+	disable() {
+		for (const hand of this.hand) { hand.disabled = true; }
+	}
+
+	constructor(game, {
+		zIndex,
+		y = 700,
+		showTable = false,
+		kanEnabled = false,
+		onClick = () => {},
+		kanButtonOnClick = async () => {}
+	} = {}) {
+		const handPosition = calcHandPosition(game.hand, game.kans);
+		const handSortPosition = calcHandPosition(game.hand, game.kans, true);
+
+		this.hand = $.addItem(...game.hand.filter(_ => _).map((tile, i) => ({
+			zIndex,
+			draggable: true,
+			path: { rect: [handPosition[i], y, 99, 100 * 4 / 3] },
+			draw: function({hover}) {
+				drawTile(this.path.rect, tile, {perspective: "up"});
+				if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+			},
+			drawSecond: function({hover, press, drag}) {
+				if (hover && showTable && !(press && !IS_SMARTPHONE)) {
+					drawCityTable(game.hand, tile.character);
+				}
+				if (drag) { drawTile([$.mouseX - 50, $.mouseY - 67, 100], tile); }
+			},
+			onClick: () => onClick(i)
+		})));
+		
+		this.sortAreas = $.addItem(...handSortPosition.map((x, i) => ({
+			zIndex,
+			path: { rect: [x, y, 90, 100 * 4 / 3] },
+			draw: ({drop}) => {
+				const handIndex = this.hand.indexOf(drop?.from);
+				if (handIndex !== -1 && handIndex !== i - 1 && handIndex !== i) {
+					const x_ = x + 50;
+					const y_ = y - 60;
+					$.ctx.bbFill({points:[ [x_, y_ + 24], [x_ - 20, y_], [x_ + 20, y_]]}, "#cc0");
+				}
+			},
+			onDrop: (from) => {
+				const handIndex = this.hand.indexOf(from);
+				if (handIndex !== -1 && handIndex !== i - 1 && handIndex !== i) {
+					game.replaceHand(handIndex, i);
+				}
+			}
+		})));
+
+		if (kanEnabled) {
+			this.kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
+				rect: [handPosition[city.position] + 10, 620, 380, 40],
+				draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
+				onClick: async () => await kanButtonOnClick(city.position)
+			})));
+		}
+
+	}
+}
+
 const calcHandPosition = (hand, kans, isDrag) => {
 	const x = (1600 - 100 * hand.length - 80 * kans.length * 4) / 2;
 	return isDrag
@@ -137,7 +210,7 @@ const isCityButtonDisabled = (city, latestTsumoPosition, restrictRule) => {
 	if (tileInHand.count >= 10) { return true; }
 };
 
-const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingItem, selectedCities, restrictRule) => ({
+const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingCityButtons, selectedCities, restrictRule) => ({
 	zIndex: 102,
 	path: { rect, radius: 20 },
 	city,
@@ -168,13 +241,13 @@ const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingIte
 		else {
 			selectedCities.push(city);
 		}
-		updateSelectedCitiesStatus(selectingItem, selectedCities, latestTsumoPosition, restrictRule);
+		updateSelectedCitiesStatus(selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule);
 		$.update();
 	}
 });
 
-const updateSelectedCitiesStatus = (selectingItem, selectedCities, latestTsumoPosition, restrictRule) => {
-	for (const button of selectingItem.cityButtons) {
+const updateSelectedCitiesStatus = (selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule) => {
+	for (const button of selectingCityButtons) {
 		if (isCityButtonDisabled(button.city, latestTsumoPosition, restrictRule)) {
 			button.disabled = true;
 			continue;

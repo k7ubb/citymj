@@ -12,8 +12,10 @@ const gameScene = (config = {
 	let isReachChecked = false;
 	let isSelecting = false;
 	let selectedCities = [];
-	let selectingItem = {};
-	let isFinished = false;
+	let handItem = {};
+	let selectingHandItem = {};
+	let selectingWinButton;
+	let selectingCityButtons = [];
 
 	const cutHand = async (i) => {
 		try {
@@ -31,11 +33,10 @@ const gameScene = (config = {
 			}
 			if (e.message === "ツモる牌がもうありません (終局)") {
 				isFinished = true;
-				$.deleteItem(...kanButtons);
-				$.deleteItem(...handSortAreas);
 				$.deleteItem(selectButton);
 				$.deleteItem(reachButton);
 				$.deleteItem(handTrashArea);
+				handItem.disable();
 				$.addItem(new Button({
 					rect: [300, 580, 400, 80],
 					value: "もう一度遊ぶ",
@@ -80,7 +81,7 @@ const gameScene = (config = {
 		zIndex: 1,
 		path: { rect: [400, 40, 800, 460] },
 		draw: function({drop}) {
-			if (drop && handButtons.includes(drop.from)) {
+			if (drop && handItem.hand.includes(drop.from)) {
 				$.ctx.bbFill(this.path, "rgb(0 0 0 / .1)");
 				$.ctx.setLineDash([15, 5]);
 				$.ctx.bbStroke(this.path, {color: "#000", width: 4});
@@ -88,100 +89,52 @@ const gameScene = (config = {
 			}
 		},
 		onDrop: (from) => {
-			const handIndex = handButtons.indexOf(from);
+			const handIndex = handItem.hand.indexOf(from);
 			if (handIndex !== -1) { cutHand(handIndex); }
 		}
 	});
 
-	let handButtons = [];
-	let handSortAreas = [];
-	let kanButtons = [];
-	
 	game.onUpdateHand = () => {
-		const handPosition = calcHandPosition(game.hand, game.kans);
-		const handSortPosition = calcHandPosition(game.hand, game.kans, true);
-
-		$.deleteItem(...handSortAreas);
-		handSortAreas = $.addItem(...handSortPosition.map((x, i) => ({
-			zIndex: 1,
-			path: { rect: [x, 700, 90, 100 * 4 / 3] },
-			draw: function({drop}) {
-				const handIndex = handButtons.indexOf(drop?.from);
-				if (handIndex !== -1 && handIndex !== i - 1 && handIndex !== i) {
-					const x_ = x + 50;
-					const y = 640;
-					$.ctx.bbFill({points:[ [x_, y + 24], [x_ - 20, y], [x_ + 20, y]]}, "#cc0");
-				}
-			},
-			onDrop: (from) => {
-				const handIndex = handButtons.indexOf(from);
-				if (handIndex !== -1 && handIndex !== i - 1 && handIndex !== i) {
-					game.replaceHand(handIndex, i);
-				}
-			}
-		})));
-
-		$.deleteItem(...handButtons);
-		handButtons = $.addItem(...game.hand.filter(x => x).map((tile, i) => ({
-			draggable: true,
-			disabled: () => isFinished,
-			path: { rect: [handPosition[i], 700, 99, 100 * 4 / 3] },
-			draw: function({hover}) {
-				drawTile(this.path.rect, tile, {perspective: "up"});
-				if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
-			},
-			drawSecond: function({hover, press, drag}) {
-				if (hover && config.showCityTable && !isSelecting && !(press && !IS_SMARTPHONE)) {
-					drawCityTable(game.hand, tile.character);
-				}
-				if (drag) { drawTile([$.mouseX - 50, $.mouseY - 67, 100], tile); }
-			},
-			onClick: function() {
+		if (handItem.destructor) { handItem.destructor(); }
+		handItem = new HandItem(game, {
+			showTable: config.showCityTable,
+			kanEnabled: true,
+			onClick: (i) => {
 				if (!IS_SMARTPHONE) { cutHand(i); }
-			}
-		})));
-		
-		$.deleteItem(...kanButtons);
-		kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
-			rect: [handPosition[city.position] + 10, 620, 380, 40],
-			draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
-			onClick: async () => {
-				game.kan(city.position);
+			},
+			kanButtonOnClick: async (position) => {
+				game.kan(position);
 				$.disabled = true;
 				await sleep(300);
 				game.tsumo({isRinshan: true});
 				$.disabled = false;
 				$.update();
 			}
-		})));
+		});
 		
 		if (isSelecting) {
 			selectedCities = [];
 			const handPosition = calcHandPosition(game.hand, game.kans);
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
-			$.deleteItem(...selectingItem.handButtons);
-			selectingItem.handButtons = $.addItem(...game.hand.map((tile, i) => ({
+
+			if (selectingHandItem.destructor) { selectingHandItem.destructor(); }
+			selectingHandItem = new HandItem(game, {
 				zIndex: 101, // dialogより上
-				path: { rect: [handPosition[i], 130, 99, 100 * 4 / 3] },
-				draw: function() {
-					drawTile(this.path.rect, tile, {perspective: "up"});
-					if (i === latestTsumoPosition) {
-						$.ctx.bbFill({
-							rect: [handPosition[i] + 10, 105, 80, 20],
-							radius: 10
-						}, "#fcc")
-						$.ctx.bbText("ツモ", handPosition[i] + 50, 105, {size: 20, align: "center", style: "bold", color: "#f00"});
-					}
-				},
-				onHover: function() {
-					if (!$.isMousePress) {
-						$.ctx.bbFill(this.path, "rgba(0 0 0 / .1)");
-					}
+				y: 130,
+			});
+			/*
+				if (i === latestTsumoPosition) {
+					$.ctx.bbFill({
+						rect: [handPosition[i] + 10, 105, 80, 20],
+						radius: 10
+					}, "#fcc")
+					$.ctx.bbText("ツモ", handPosition[i] + 50, 105, {size: 20, align: "center", style: "bold", color: "#f00"});
 				}
-			})));
-			$.deleteItem(...selectingItem.cityButtons);
+			*/
+
+			$.deleteItem(...selectingCityButtons);
 			const count = Array(handPosition.length).fill().map(() => []);
-			selectingItem.cityButtons = $.addItem(...game.cities.filter(city => city.length !== 4).map(city => {
+			selectingCityButtons = $.addItem(...game.cities.filter(city => city.length !== 4).map(city => {
 				const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 				let line = 0; while(set.includes(line)) { line++; }
 				for (let i = 0; i < city.length; i++) {
@@ -192,7 +145,7 @@ const gameScene = (config = {
 					270 + line * 105,
 					100 * city.length - 5,
 					100
-				], latestTsumoPosition, selectingItem, selectedCities, config.restrictRule);
+				], latestTsumoPosition, selectingCityButtons, selectedCities, config.restrictRule);
 			}));
 		}
 	};
@@ -200,70 +153,24 @@ const gameScene = (config = {
 	
 	const selectingStart = () => {
 		isSelecting = true;
-		selectingItem = {
-			handButtons: [],
-			cityButtons: []
-		};
 		$.addItem(new Dialog({
 			rect: [20, 20, 1560, 860],
-			onClose: () => {
-				isSelecting = false;
-				for (let key of Object.keys(selectingItem)) {
-					$.deleteItem(...selectingItem[key]);
-				}
-			}
-		}));
-		selectingItem.dragArea = $.addItem({
-			zIndex: 101,
-			path: { rect: [0, 0, 1600, 900] },
-			onMousePress: function() {
-				if (($.mouseX - $.startX) ** 2 + ($.mouseY - $.startY) ** 2 < 1000) { return; }
-				const handPosition = calcHandPosition(game.hand, game.kans);
-				const handDragPosition = calcHandPosition(game.hand, game.kans, true);
-				for (let i = 0; i < handPosition.length; i++) {
-					if ($.isPointInPath({rect: [handPosition[i], 130, 99, 100 * 4 / 3] }, $.startX, $.startY)) {
-						drawTile([$.mouseX - 50, $.mouseY - 67, 100], game.hand[i]);
-						for (let j = 0; j < handDragPosition.length; j++) {
-							if (i === j || i + 1 === j) { continue; }
-							if ($.isPointInPath({rect: [handDragPosition[j], 130, 99, 100 * 4 / 3]}, $.mouseX, $.mouseY)) {
-								const x = handDragPosition[j] + 50;
-								const y = 70;
-								$.ctx.bbFill({points:[ [x, y + 24], [x - 20, y], [x + 20, y]]}, "#cc0");
-								return;
-							}
-						}
+			draw: () => {
+				for (let i = 0; i < game.kans.length; i++) {
+					const x = 1560 - 21 - 324 * (i + 1) - 8 * i;
+					for (let j = 0; j < 4; j++) {
+						drawTile([x + 81 * j, 137, 81], game.kans[i][j]); 
 					}
 				}
 			},
-			onMouseUp: function() {
-				const handPosition = calcHandPosition(game.hand, game.kans);
-				const handDragPosition = calcHandPosition(game.hand, game.kans, true);
-				for (let i = 0; i < handPosition.length; i++) {
-					if ($.isPointInPath({rect: [handPosition[i], 130, 99, 100 * 4 / 3] }, $.startX, $.startY)) {
-						for (let j = 0; j < handDragPosition.length; j++) {
-							if (i === j || i + 1 === j) { continue; }
-							if ($.isPointInPath({rect: [handDragPosition[j], 130, 99, 100 * 4 / 3]}, $.mouseX, $.mouseY)) {
-								game.replaceHand(i, j);
-								$.update();
-								return;
-							}
-						}
-					}
-				}
+			onClose: () => {
+				isSelecting = false;
+				$.deleteItem(selectingWinButton);
+				$.deleteItem(...selectingCityButtons);
+				selectingHandItem.destructor();
 			}
-		});
-		selectingItem.drawArea = $.addItem({
-			zIndex: 101,
-			draw: () => {
-				for (let i = 0; i < game.kans.length; i++) {
-					const x = 1600 - 41 - 324 * (i + 1) - 8 * i;
-					for (let j = 0; j < 4; j++) {
-						drawTile([x + 81 * j, 157, 81], game.kans[i][j]); 
-					}
-				}
-			}
-		});
-		selectingItem.winButton = $.addItem(new Button({
+		}));
+		[selectingWinButton] = $.addItem(new Button({
 			zIndex: 101,
 			disabled: () => selectedCities.reduce((a, b) => a + b.length, 0) !== game.hand.length,
 			rect: [1250, 780, 300, 80],
