@@ -63,25 +63,26 @@ class ItemsCanvas {
 		this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 		this.ctx.restore();
 		this.draw();
-		const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
-		const status = [];
+		const tasks = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)).map(item => ({
+			item,
+			status: { hover: false, press: false, drag: false, drop: null }
+		}));
 		let from = null;
-		for (let i = 0; i < items.length; i++) {
-			status[i] = { hover: false, press: false, drag: false, drop: null };
+		for (let i = 0; i < tasks.length; i++) {
 			if (this.#eval(this.disabled)) { continue; }
-			if (i >= items.findIndex(item => item.final) && !this.#eval(items[i].disabled) && items[i].path) {
-				const startInPoint = this.isPointInPath(items[i].path, this.startX, this.startY);
-				const mouseInPoint = this.isPointInPath(items[i].path, this.mouseX, this.mouseY);
-				if (mouseInPoint) { status[i].hover = true; }
+			if (i >= tasks.findIndex(task => task.item.final) && !this.#eval(tasks[i].item.disabled) && tasks[i].item.path) {
+				const startInPoint = this.isPointInPath(tasks[i].item.path, this.startX, this.startY);
+				const mouseInPoint = this.isPointInPath(tasks[i].item.path, this.mouseX, this.mouseY);
+				if (mouseInPoint) { tasks[i].status.hover = true; }
 				if (this.isMousePress) {
-					if (mouseInPoint) { status[i].press = true; }
-					if (items[i].draggable && startInPoint && !mouseInPoint) { status[i].drag = true; from = items[i]; }
-					if (!startInPoint && mouseInPoint) { status[i].drop = {from}; }
+					if (mouseInPoint) { tasks[i].status.press = true; }
+					if (tasks[i].item.draggable && startInPoint && !mouseInPoint) { tasks[i].status.drag = true; from = tasks[i].item; }
+					if (!startInPoint && mouseInPoint) { tasks[i].status.drop = {from}; }
 				}
 			}
 		}
-		for (let i = 0; i < items.length; i++) { if (items[i].draw) { items[i].draw(status[i]); } }
-		for (let i = 0; i < items.length; i++) { if (items[i].drawSecond) { items[i].drawSecond(status[i]); } }
+		for (let i = 0; i < tasks.length; i++) { if (tasks[i].item.draw) { tasks[i].item.draw(tasks[i].status); } }
+		for (let i = 0; i < tasks.length; i++) { if (tasks[i].item.drawSecond) { tasks[i].item.drawSecond(tasks[i].status); } }
 	}
 	
 	disabled = false;
@@ -117,41 +118,24 @@ class ItemsCanvas {
 			
 			this.ctx.canvas.addEventListener(isSmartphone ? 'touchend' : 'mouseup', () => {
 				if (!this.#eval(this.disabled)) {
-					const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
-					const status = [];
-					const finalIndex = items.findIndex(item => item.final);
+					const tasks = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0)).map(item => ({
+						item,
+						status: { hover: false, press: false, drag: false, drop: null }
+					}));
+					const finalIndex = tasks.findIndex(task => task.item.final);
 					const startIndex = finalIndex === -1 ? 0 : finalIndex;
 					let from = null;
-					for (let i = startIndex; i < items.length; i++) {
-						status[i] = { click: false, drop: null };
-						if (this.#eval(items[i].disabled) || !items[i].path) { continue; }
-						const startInPoint = this.isPointInPath(items[i].path, this.startX, this.startY);
-						const mouseInPoint = this.isPointInPath(items[i].path, this.mouseX, this.mouseY);
-						if (startInPoint && mouseInPoint) { status[i].click = true; }
-						if (items[i].draggable && startInPoint && !mouseInPoint) { from = items[i]; }
-						if (!startInPoint && mouseInPoint) { status[i].drop = {from}; }
+					for (let i = startIndex; i < tasks.length; i++) {
+						if (this.#eval(tasks[i].item.disabled) || !tasks[i].item.path) { continue; }
+						const startInPoint = this.isPointInPath(tasks[i].item.path, this.startX, this.startY);
+						const mouseInPoint = this.isPointInPath(tasks[i].item.path, this.mouseX, this.mouseY);
+						if (startInPoint && mouseInPoint) { tasks[i].status.click = true; }
+						if (tasks[i].item.draggable && startInPoint && !mouseInPoint) { from = tasks[i].item; }
+						if (!startInPoint && mouseInPoint) { tasks[i].status.drop = {from}; }
 					}
-					for (let i = startIndex; i < items.length; i++) {
-						if (status[i].click && items[i].onClick) { items[i].onClick(); }
-						if (status[i].drop && items[i].onDrop) { items[i].onDrop(status[i].drop?.from); }
-					}
-				}
-				this.isMousePress = false;
-				this.isDragged = false;
-				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
-				this.update();
-			});
-/*
-			this.ctx.canvas.addEventListener(isSmartphone ? 'touchend' : 'mouseup', () => {
-				if (!this.disabled) {
-					const items = this.#items.sort((a, b) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
-					const finalIndex = items.findIndex(item => item.final);
-					const startIndex = finalIndex === -1 ? 0 : finalIndex;
-					for (let i = startIndex; i < items.length; i++) {
-						if (this.#eval(items[i].disabled)) { continue; }
-						if (items[i].path && this.isPointInPath(items[i].path, this.mouseX, this.mouseY)) {
-							if (!this.isDragged && items[i].onClick) { items[i].onClick(); }
-						}
+					for (let i = startIndex; i < tasks.length; i++) {
+						if (tasks[i].status.click && tasks[i].item.onClick) { tasks[i].item.onClick(); }
+						if (tasks[i].status.drop && tasks[i].item.onDrop) { tasks[i].item.onDrop(tasks[i].status.drop?.from); }
 					}
 				}
 				this.isMousePress = false;
@@ -159,7 +143,6 @@ class ItemsCanvas {
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
 				this.update();
 			});
-*/
 
 			if (!isSmartphone) {
 				this.ctx.canvas.addEventListener('mouseleave', () => {
