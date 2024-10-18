@@ -35,7 +35,6 @@ scoreScene(
 		restrictRule: true,
 	}
 );
-*/
 gameScene(
 	{
 		handLength: 14,

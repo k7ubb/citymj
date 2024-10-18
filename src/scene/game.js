@@ -97,7 +97,7 @@ const gameScene = (config = {
 	});
 
 	game.onUpdateHand = () => {
-		if (handItem.destructor) { handItem.destructor(); }
+		handItem.removeItems?.();
 		handItem = new HandItem(game, {
 			drawSecond: ({hover, press}, tile) => {
 				if (config.showCityTable && hover && !(press && !IS_SMARTPHONE)) {
@@ -125,8 +125,7 @@ const gameScene = (config = {
 		if (isSelecting) {
 			selectedCities = [];
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
-
-			if (selectingHandItem.destructor) { selectingHandItem.destructor(); }
+			selectingHandItem.removeItems?.();
 			selectingHandItem = new HandItem(game, {
 				zIndex: 101, // dialogより上
 				y: 130,
@@ -142,20 +141,19 @@ const gameScene = (config = {
 			});
 			
 			$.deleteItem(...selectingCityButtons);
-			const count = Array(selectingHandItem.hand.length).fill().map(() => []);
-			selectingCityButtons = $.addItem(...game.cities.filter(city => city.length !== 4).map(city => {
-				const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
-				let line = 0; while(set.includes(line)) { line++; }
-				for (let i = 0; i < city.length; i++) {
-					count[city.position + i].push(line);
-				}
-				return createSelectingHandButton(city, [
+			selectingCityButtons = $.addItem(...calcCityOverlap(game.cities).map(({city, overlap}) => createSelectingHandButton(
+				city,
+				[
 					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
-					270 + line * 105,
+					270 + overlap * 105,
 					100 * city.length - 5,
 					100
-				], latestTsumoPosition, selectingCityButtons, selectedCities, config.restrictRule);
-			}));
+				],
+				latestTsumoPosition,
+				selectingCityButtons,
+				selectedCities,
+				config.restrictRule
+			)));
 		}
 	};
 	game.onUpdateHand();
@@ -176,7 +174,7 @@ const gameScene = (config = {
 				isSelecting = false;
 				$.deleteItem(selectingWinButton);
 				$.deleteItem(...selectingCityButtons);
-				selectingHandItem.destructor();
+				selectingHandItem.removeItems();
 			}
 		}));
 		[selectingWinButton] = $.addItem(new Button({
@@ -235,8 +233,17 @@ const gameScene = (config = {
 			$.ctx.bbText("⚠️くっつき待ち制限: ON", 1556, 20, {size: 30, align: "right"});
 		}
 		if (config.showHandGuide) {
-			const handPosition = calcHandPosition(game.hand, game.kans);
-			drawHandGuide(game.cities, handPosition);
+			calcCityOverlap(game.cities).map(({city, overlap}) => {
+				$.ctx.bbFill({
+					rect: [
+						handItem.hand[city.position].path.rect[0] + 10,
+						840 + overlap * 10,
+						100 * city.length - 20,
+						5
+					],
+					radius: 2.5
+				}, "#f00");		
+			});
 		}
 	};
 

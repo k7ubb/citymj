@@ -2,13 +2,15 @@ class HandItem {
 	hand = [];
 	sortAreas = [];
 
-	destructor() {
+	removeItems() {
 		$.deleteItem(...this.hand);
 		$.deleteItem(...this.sortAreas);
 	}
 
+	// 手牌をドラッグ不可にする (表示のみ残す)
 	disable() {
 		for (const hand of this.hand) { hand.disabled = true; }
+		$.deleteItem(...this.sortAreas);
 	}
 
 	constructor(game, {
@@ -18,9 +20,10 @@ class HandItem {
 		draw = () => {},
 		drawSecond = () => {}
 	} = {}) {
-		const handPosition = calcHandPosition(game.hand, game.kans);
-		const handSortPosition = calcHandPosition(game.hand, game.kans, true);
-
+		const START_X = (1600 - 100 * game.hand.length - 80 * game.kans.length * 4) / 2;
+		const handPosition = game.hand.map((_, i) => START_X + 100 * i);
+		const handSortPosition = [...game.hand, null].map((_, i) => START_X - 50 + 100 * i)
+		
 		this.hand = $.addItem(...game.hand.filter(_ => _).map((tile, i) => ({
 			zIndex,
 			draggable: true,
@@ -57,13 +60,6 @@ class HandItem {
 		})));
 	}
 }
-
-const calcHandPosition = (hand, kans, isDrag) => {
-	const x = (1600 - 100 * hand.length - 80 * kans.length * 4) / 2;
-	return isDrag
-		?	[...hand, null].map((_, i) => x - 50 + 100 * i)
-		: hand.map((_, i) => x + 100 * i);
-};
 
 const drawDora = (dora, uradora, doraCount) => {
 	for (let i = 0; i < 5; i++) {
@@ -116,8 +112,10 @@ const drawKan = (kans) => {
 	}
 };
 
-const drawHandGuide = (cities, handPosition) => {
-	const count = Array(handPosition.length).fill().map(() => []);
+const calcCityOverlap = (cities, skipSameNameCity = false) => {
+	const maxTile = Math.max(...cities.map(city => city.position + city.length));
+	const count = Array(maxTile).fill().map(() => []);
+	const result = [];
 	let lastPos;
 	let lastCities;
 	for (let city of cities) {
@@ -125,23 +123,22 @@ const drawHandGuide = (cities, handPosition) => {
 			lastPos = city.position;
 			lastCities = [];
 		}
-		if (lastCities.includes(city.name)) { continue; }
-		else { lastCities.push(city.name); }
+		if (lastCities.includes(city.name)) {
+			if (skipSameNameCity) { continue; }
+		}	else {
+			lastCities.push(city.name);
+		}
 		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 		let line = 0; while(set.includes(line)) { line++; }
 		for (let i = 0; i < city.length; i++) {
 			count[city.position + i].push(line);
 		}
-		$.ctx.bbFill({
-			rect: [
-				handPosition[city.position] + 10,
-				840 + line * 10,
-				100 * city.length - 20,
-				5
-			],
-			radius: 2.5
-		}, "#f00");
+		result.push({
+			city,
+			overlap: line
+		});
 	}
+	return result;
 };
 
 const drawCityTable = (hand, character) => {
@@ -158,9 +155,6 @@ const drawCityTable = (hand, character) => {
 		$.ctx.bbText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE, style: isInHand? "bold" : ""});
 	}
 };
-
-
-// 以下、selecting
 
 const selectingHandButtonFillColor = (category) => {
 	switch (category) {
