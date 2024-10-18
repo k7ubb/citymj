@@ -61,33 +61,71 @@ class HandItem {
 	}
 }
 
-class SelectingCityButtons {
+class SelectingCityClass {
 	buttons = [];
 
 	removeItems() {
 		$.deleteItem(...this.buttons);
 	}
 	
-	constructor(cities, selectingHandItem, latestTsumoPosition, restrictRule) {
-		this.hand = $.addItem(...calcCityOverlap(cities).map(({city, overlap}) => ({
+	updateSelectedStatus() {
+		const selectedCities = this.buttons.filter(button => button.selected).map(button => button.city);
+		for (const button of this.buttons) {
+			button.disabled = false;
+			if (button.selected) { continue; }
+			// くっつき待ち制限
+			if ( this.restrictRule
+				&& button.city.length === 2
+				&& button.city.position <= this.latestTsumoPosition
+				&& this.latestTsumoPosition <= button.city.position + button.city.length - 1
+			) {
+				const waitedChar = button.city.name[1 - (this.latestTsumoPosition - button.city.position)];
+				const waitedCharTile = TILES.filter(tile => tile.character === waitedChar)[0];
+				if (waitedCharTile.count >= 10) {
+					button.disabled = true;
+					continue;
+				}
+			}
+			for (const city of selectedCities) {
+				// 選択済みの市町村と共通の牌を使っていないか
+				if (button.city.position + button.city.length - 1 >= city.position && city.position + city.length - 1 >= button.city.position) {
+					button.disabled = true;
+					break;
+				}
+				// 同一の市町村がすでに存在しないか
+				if (button.city.name === city.name && button.city.category === city.category && button.city.pref === city.pref) {
+					button.disabled = true;
+					break;
+				}
+			}
+		}
+	}
+
+	constructor(cities, handPosition, latestTsumoPosition, restrictRule) {
+		this.latestTsumoPosition = latestTsumoPosition;
+		this.restrictRule = restrictRule;
+		// 異なるthisを参照するため: 暫定
+		const thisClass = this;
+		this.buttons = $.addItem(...calcCityOverlap(cities).map(({city, overlap}) => ({
+			// 本当は, selectedとcityはitem内に持たせたくない…
+			selected: false,
+			city,
 			zIndex: 102,
 			path: {
 				rect: [
-					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
+					handPosition[city.position] + 2.5,
 					270 + overlap * 105,
 					100 * city.length - 5,
 					100
 				],
 				radius: 20
 			},
-			city,
-			disabled: isCityButtonDisabled(city, latestTsumoPosition, restrictRule),
 			draw: function() {
 				$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
-				if (selectedCities.includes(city)) {
+				if (this.selected) {
 					$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
 				}
-				const [x, y, w, h] = rect;
+				const [x, y, w, h] = this.path.rect;
 				$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
 				const description = [
 					city.category,
@@ -96,22 +134,17 @@ class SelectingCityButtons {
 					...(city.ritou? ["島"] : [])
 				].join(" ");
 				$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
-				if (disabled) {
+				if (this.disabled) {
 					$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
 				}
 			},
 			onClick: function() {
-				if (disabled) { return; }
-				if (selectedCities.includes(city)) {
-					selectedCities.splice(selectedCities.indexOf(city), 1);
-				}
-				else {
-					selectedCities.push(city);
-				}
-				updateSelectedCitiesStatus(selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule);
+				this.selected = !this.selected;
+				thisClass.updateSelectedStatus.bind(thisClass)();
 				$.update();
 			}
 		})));
+		this.updateSelectedStatus.bind(this)();
 	}
 }
 
@@ -229,75 +262,5 @@ const selectingHandButtonTextColor = (category) => {
 			return "#800000";
 		case "村":
 			return "#008000";
-	}
-};
-
-const isCityButtonDisabled = (city, latestTsumoPosition, restrictRule) => {
-	if (!restrictRule) { return false; }
-	if (city.position > latestTsumoPosition || latestTsumoPosition > city.position + city.length - 1) {
-		return false;
-	}
-	if (city.length !== 2) {
-		return false;
-	}
-	const tileInHandChar = city.name.replace(city.name[latestTsumoPosition - city.position], "");
-	const tileInHand = TILES.filter(tile => tile.character === tileInHandChar)[0];
-	if (tileInHand.count >= 10) { return true; }
-};
-
-const createSelectingHandButton = (city, rect, disabled, latestTsumoPosition, selectingCityButtons, selectedCities, restrictRule) => ({
-	zIndex: 102,
-	path: { rect, radius: 20 },
-	city,
-	disabled,
-	draw: function() {
-		$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
-		if (selectedCities.includes(city)) {
-			$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
-		}
-		const [x, y, w, h] = rect;
-		$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
-		const description = [
-			city.category,
-			...(city.kento? ["都"] : []),
-			...(city.seirei? ["令"] : []),
-			...(city.ritou? ["島"] : [])
-		].join(" ");
-		$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
-		if (disabled) {
-			$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
-		}
-	},
-	onClick: function() {
-		if (disabled) { return; }
-		if (selectedCities.includes(city)) {
-			selectedCities.splice(selectedCities.indexOf(city), 1);
-		}
-		else {
-			selectedCities.push(city);
-		}
-		updateSelectedCitiesStatus(selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule);
-		$.update();
-	}
-});
-
-const updateSelectedCitiesStatus = (selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule) => {
-	for (const button of selectingCityButtons) {
-		if (isCityButtonDisabled(button.city, latestTsumoPosition, restrictRule)) {
-			button.disabled = true;
-			continue;
-		};
-		if (selectedCities.includes(button.city)) { continue; }
-		button.disabled = false;
-		for (const city of selectedCities) {
-			if (button.city.position + button.city.length - 1 >= city.position && city.position + city.length - 1 >= button.city.position) {
-				button.disabled = true;
-				break;
-			}
-			if (button.city.name === city.name && button.city.category === city.category && button.city.pref === city.pref) {
-				button.disabled = true;
-				break;
-			}
-		}
 	}
 };
