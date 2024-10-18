@@ -16,7 +16,7 @@ const gameScene = (config = {
 	let kanButtons = [];
 	let selectingHandItem = {};
 	let selectingWinButton;
-	let selectingCityButtons = [];
+	let selectingCityButtons = {};
 
 	const cutHand = async (i) => {
 		try {
@@ -140,6 +140,9 @@ const gameScene = (config = {
 				}
 			});
 			
+			selectingCityButtons.removeItems?.();
+			selectingCityButtons = new SelectingCityButtons(game.cities, selectingHandItem, latestTsumoPosition, config.restrictRule);
+/*
 			$.deleteItem(...selectingCityButtons);
 			selectingCityButtons = $.addItem(...calcCityOverlap(game.cities).map(({city, overlap}) => createSelectingHandButton(
 				city,
@@ -149,11 +152,13 @@ const gameScene = (config = {
 					100 * city.length - 5,
 					100
 				],
+				isCityButtonDisabled(city, latestTsumoPosition, config.restrictRule),
 				latestTsumoPosition,
 				selectingCityButtons,
 				selectedCities,
 				config.restrictRule
 			)));
+*/
 		}
 	};
 	game.onUpdateHand();

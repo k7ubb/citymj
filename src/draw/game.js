@@ -61,6 +61,60 @@ class HandItem {
 	}
 }
 
+class SelectingCityButtons {
+	buttons = [];
+
+	removeItems() {
+		$.deleteItem(...this.buttons);
+	}
+	
+	constructor(cities, selectingHandItem, latestTsumoPosition, restrictRule) {
+		this.hand = $.addItem(...calcCityOverlap(cities).map(({city, overlap}) => ({
+			zIndex: 102,
+			path: {
+				rect: [
+					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
+					270 + overlap * 105,
+					100 * city.length - 5,
+					100
+				],
+				radius: 20
+			},
+			city,
+			disabled: isCityButtonDisabled(city, latestTsumoPosition, restrictRule),
+			draw: function() {
+				$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
+				if (selectedCities.includes(city)) {
+					$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
+				}
+				const [x, y, w, h] = rect;
+				$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
+				const description = [
+					city.category,
+					...(city.kento? ["都"] : []),
+					...(city.seirei? ["令"] : []),
+					...(city.ritou? ["島"] : [])
+				].join(" ");
+				$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
+				if (disabled) {
+					$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
+				}
+			},
+			onClick: function() {
+				if (disabled) { return; }
+				if (selectedCities.includes(city)) {
+					selectedCities.splice(selectedCities.indexOf(city), 1);
+				}
+				else {
+					selectedCities.push(city);
+				}
+				updateSelectedCitiesStatus(selectingCityButtons, selectedCities, latestTsumoPosition, restrictRule);
+				$.update();
+			}
+		})));
+	}
+}
+
 const drawDora = (dora, uradora, doraCount) => {
 	for (let i = 0; i < 5; i++) {
 		drawTile([80 + 60 * i, 70, 59], uradora[i].tile, {perspective: "ura"});
@@ -191,11 +245,11 @@ const isCityButtonDisabled = (city, latestTsumoPosition, restrictRule) => {
 	if (tileInHand.count >= 10) { return true; }
 };
 
-const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingCityButtons, selectedCities, restrictRule) => ({
+const createSelectingHandButton = (city, rect, disabled, latestTsumoPosition, selectingCityButtons, selectedCities, restrictRule) => ({
 	zIndex: 102,
 	path: { rect, radius: 20 },
 	city,
-	disabled: isCityButtonDisabled(city, latestTsumoPosition, restrictRule),
+	disabled,
 	draw: function() {
 		$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
 		if (selectedCities.includes(city)) {
@@ -210,12 +264,12 @@ const createSelectingHandButton = (city, rect, latestTsumoPosition, selectingCit
 			...(city.ritou? ["島"] : [])
 		].join(" ");
 		$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
-		if (isCityButtonDisabled(city, latestTsumoPosition, restrictRule)) {
+		if (disabled) {
 			$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
 		}
 	},
 	onClick: function() {
-		if (isCityButtonDisabled(city, latestTsumoPosition)) { return; }
+		if (disabled) { return; }
 		if (selectedCities.includes(city)) {
 			selectedCities.splice(selectedCities.indexOf(city), 1);
 		}
