@@ -13,6 +13,7 @@ const gameScene = (config = {
 	let isSelecting = false;
 	let selectedCities = [];
 	let handItem = {};
+	let kanButtons = [];
 	let selectingHandItem = {};
 	let selectingWinButton;
 	let selectingCityButtons = [];
@@ -36,6 +37,7 @@ const gameScene = (config = {
 				$.deleteItem(selectButton);
 				$.deleteItem(reachButton);
 				$.deleteItem(handTrashArea);
+				$.deleteItem(...kanButtons);
 				handItem.disable();
 				$.addItem(new Button({
 					rect: [300, 580, 400, 80],
@@ -97,43 +99,50 @@ const gameScene = (config = {
 	game.onUpdateHand = () => {
 		if (handItem.destructor) { handItem.destructor(); }
 		handItem = new HandItem(game, {
-			showTable: config.showCityTable,
-			kanEnabled: true,
+			drawSecond: ({hover, press}, tile) => {
+				if (config.showCityTable && hover && !(press && !IS_SMARTPHONE)) {
+					drawCityTable(game.hand, tile.character);
+				}
+			},
 			onClick: (i) => {
 				if (!IS_SMARTPHONE) { cutHand(i); }
 			},
-			kanButtonOnClick: async (position) => {
-				game.kan(position);
+		});
+		$.deleteItem(...kanButtons);
+		kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
+			rect: [handItem.hand[city.position].path.rect[0] + 10, 620, 380, 40],
+			draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
+			onClick: async () => {
+				game.kan(city.position);
 				$.disabled = true;
 				await sleep(300);
 				game.tsumo({isRinshan: true});
 				$.disabled = false;
 				$.update();
 			}
-		});
+		})));
 		
 		if (isSelecting) {
 			selectedCities = [];
-			const handPosition = calcHandPosition(game.hand, game.kans);
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
 
 			if (selectingHandItem.destructor) { selectingHandItem.destructor(); }
 			selectingHandItem = new HandItem(game, {
 				zIndex: 101, // dialogより上
 				y: 130,
-			});
-			/*
-				if (i === latestTsumoPosition) {
-					$.ctx.bbFill({
-						rect: [handPosition[i] + 10, 105, 80, 20],
-						radius: 10
-					}, "#fcc")
-					$.ctx.bbText("ツモ", handPosition[i] + 50, 105, {size: 20, align: "center", style: "bold", color: "#f00"});
+				draw: ({}, tile, i) => {
+					if (i === latestTsumoPosition) {
+						$.ctx.bbFill({
+							rect: [selectingHandItem.hand[i].path.rect[0] + 10, 105, 80, 20],
+							radius: 10
+						}, "#fcc")
+						$.ctx.bbText("ツモ", selectingHandItem.hand[i].path.rect[0] + 50, 105, {size: 20, align: "center", style: "bold", color: "#f00"});
+					}
 				}
-			*/
-
+			});
+			
 			$.deleteItem(...selectingCityButtons);
-			const count = Array(handPosition.length).fill().map(() => []);
+			const count = Array(selectingHandItem.hand.length).fill().map(() => []);
 			selectingCityButtons = $.addItem(...game.cities.filter(city => city.length !== 4).map(city => {
 				const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
 				let line = 0; while(set.includes(line)) { line++; }
@@ -141,7 +150,7 @@ const gameScene = (config = {
 					count[city.position + i].push(line);
 				}
 				return createSelectingHandButton(city, [
-					handPosition[city.position] + 2.5,
+					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
 					270 + line * 105,
 					100 * city.length - 5,
 					100
