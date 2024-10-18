@@ -10,13 +10,11 @@ const gameScene = (config = {
 
 	const game = new Game(config.handLength, debugMauntain);
 	let isReachChecked = false;
-	let isSelecting = false;
-	let selectedCities = [];
 	let handItem = {};
-	let kanButtons = [];
 	let selectingHandItem = {};
+	let kanButtons = [];
 	let selectingWinButton;
-	let selectingCityButtons = {};
+	let selectingClass = null;
 
 	const cutHand = async (i) => {
 		try {
@@ -33,7 +31,6 @@ const gameScene = (config = {
 				alert("リーチ後はツモ切りしかできません");
 			}
 			if (e.message === "ツモる牌がもうありません (終局)") {
-				isFinished = true;
 				$.deleteItem(selectButton);
 				$.deleteItem(reachButton);
 				$.deleteItem(handTrashArea);
@@ -122,8 +119,7 @@ const gameScene = (config = {
 			}
 		})));
 		
-		if (isSelecting) {
-			selectedCities = [];
+		if (selectingClass) {
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
 			selectingHandItem.removeItems?.();
 			selectingHandItem = new HandItem(game, {
@@ -140,31 +136,19 @@ const gameScene = (config = {
 				}
 			});
 			
-			selectingCityButtons.removeItems?.();
-			selectingCityButtons = new SelectingCityButtons(game.cities, selectingHandItem, latestTsumoPosition, config.restrictRule);
-/*
-			$.deleteItem(...selectingCityButtons);
-			selectingCityButtons = $.addItem(...calcCityOverlap(game.cities).map(({city, overlap}) => createSelectingHandButton(
-				city,
-				[
-					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
-					270 + overlap * 105,
-					100 * city.length - 5,
-					100
-				],
-				isCityButtonDisabled(city, latestTsumoPosition, config.restrictRule),
+			selectingClass.removeItems?.();
+			selectingClass = new SelectingCityClass(
+				game.cities,
+				selectingHandItem.hand.map(item => item.path.rect[0]),
 				latestTsumoPosition,
-				selectingCityButtons,
-				selectedCities,
 				config.restrictRule
-			)));
-*/
+			);
 		}
 	};
 	game.onUpdateHand();
 	
 	const selectingStart = () => {
-		isSelecting = true;
+		selectingClass = true;
 		$.addItem(new Dialog({
 			rect: [20, 20, 1560, 860],
 			draw: () => {
@@ -176,15 +160,16 @@ const gameScene = (config = {
 				}
 			},
 			onClose: () => {
-				isSelecting = false;
 				$.deleteItem(selectingWinButton);
-				$.deleteItem(...selectingCityButtons);
 				selectingHandItem.removeItems();
+				selectingClass.removeItems();
+				selectingClass = null;
 			}
 		}));
 		[selectingWinButton] = $.addItem(new Button({
 			zIndex: 101,
-			disabled: () => selectedCities.reduce((a, b) => a + b.length, 0) !== game.hand.length,
+			disabled: true,
+//			disabled: () => selectedCities.reduce((a, b) => a + b.length, 0) !== game.hand.length,
 			rect: [1250, 780, 300, 80],
 			value: "面子を確定",
 			onClick: function() {
@@ -247,10 +232,10 @@ const gameScene = (config = {
 						5
 					],
 					radius: 2.5
-				}, "#f00");		
+				}, "#f00");
 			});
 		}
 	};
-
+	
 	$.update();
 };
