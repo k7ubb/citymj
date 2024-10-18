@@ -143,7 +143,7 @@ class ItemsCanvas {
 				[this.mouseX, this.mouseY] = [this.startX, this.startY] = [-1, -1];
 				this.update();
 			});
-
+			
 			if (!isSmartphone) {
 				this.ctx.canvas.addEventListener('mouseleave', () => {
 					this.isMousePress = false;

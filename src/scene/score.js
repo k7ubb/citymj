@@ -143,24 +143,5 @@ const drawDora2 = (dora, uradora, doraCount, isReached) => {
 		}
 		drawTile([1200 + 60 * i, 200, 59], dora[i].tile, {perspective: i < doraCount? "down" : "ura"});
 	}
-	
-/*
-	dora = dora.filter((d, i) => i < doraCount && d.char);
-	if (dora.length) {
-		const maxWidth = dora.reduce((a, b) => Math.max(a, b.char.length), 0);
-		$.ctx.bbStroke({rect: [80, 182, 24 + 60 * maxWidth, 60 + 84 * dora.length]}, {color: COLOR_STRONG, width: 2});
-		$.ctx.bbText("ドラ", 90, 192, {size: 30, color: COLOR_STRONG, style: "bold"})
-		for (let i = 0; i < dora.length; i++) {
-			for (let j = 0; j < dora[i].char.length; j++) {
-				const tile = { ...TILES.filter(tile => tile.character === dora[i].char[j])[0], red: false };
-				drawTile([60 * j + 90, 84 * i + 232, 59], tile);
-			}
-		}
-	} else {
-		$.ctx.bbStroke({rect: [80, 182, 144, 120]}, {color: COLOR_STRONG, width: 2});
-		$.ctx.bbText("ドラ", 90, 192, {size: 30, color: COLOR_STRONG, style: "bold"})
-		$.ctx.bbText("なし", 90, 232, {size: 60, color: COLOR_STRONG});
-	}
-*/
 };
 
