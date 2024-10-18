@@ -1,12 +1,10 @@
 class HandItem {
 	hand = [];
 	sortAreas = [];
-	kanButtons = [];
 
 	destructor() {
 		$.deleteItem(...this.hand);
 		$.deleteItem(...this.sortAreas);
-		$.deleteItem(...this.kanButtons);
 	}
 
 	disable() {
@@ -14,12 +12,11 @@ class HandItem {
 	}
 
 	constructor(game, {
-		zIndex,
+		zIndex = 0,
 		y = 700,
-		showTable = false,
-		kanEnabled = false,
 		onClick = () => {},
-		kanButtonOnClick = async () => {}
+		draw = () => {},
+		drawSecond = () => {}
 	} = {}) {
 		const handPosition = calcHandPosition(game.hand, game.kans);
 		const handSortPosition = calcHandPosition(game.hand, game.kans, true);
@@ -31,12 +28,11 @@ class HandItem {
 			draw: function({hover}) {
 				drawTile(this.path.rect, tile, {perspective: "up"});
 				if (hover) { $.ctx.bbFill(this.path, "rgba(0 0 0 / .1)"); }
+				draw({hover}, tile, i);
 			},
 			drawSecond: function({hover, press, drag}) {
-				if (hover && showTable && !(press && !IS_SMARTPHONE)) {
-					drawCityTable(game.hand, tile.character);
-				}
 				if (drag) { drawTile([$.mouseX - 50, $.mouseY - 67, 100], tile); }
+				drawSecond({hover, press, drag}, tile, i);
 			},
 			onClick: () => onClick(i)
 		})));
@@ -44,7 +40,7 @@ class HandItem {
 		this.sortAreas = $.addItem(...handSortPosition.map((x, i) => ({
 			zIndex,
 			path: { rect: [x, y, 90, 100 * 4 / 3] },
-			draw: ({drop}) => {
+			drawSecond: ({drop}) => {
 				const handIndex = this.hand.indexOf(drop?.from);
 				if (handIndex !== -1 && handIndex !== i - 1 && handIndex !== i) {
 					const x_ = x + 50;
@@ -59,15 +55,6 @@ class HandItem {
 				}
 			}
 		})));
-
-		if (kanEnabled) {
-			this.kanButtons = $.addItem(...game.cities.filter(city => city.length === 4).map(city => new Button({
-				rect: [handPosition[city.position] + 10, 620, 380, 40],
-				draw: function([x, y, w, h]) { $.ctx.bbText("カン", x + w / 2, y + h / 2, {size: 30, align: "center", baseline: "middle"}); },
-				onClick: async () => await kanButtonOnClick(city.position)
-			})));
-		}
-
 	}
 }
 
