@@ -10,13 +10,11 @@ const gameScene = (config = {
 
 	const game = new Game(config.handLength, debugMauntain);
 	let isReachChecked = false;
-	let isSelecting = false;
-	let selectedCities = [];
-	let handItem = {};
+	let handItem;
+	let selectingHandItem;
 	let kanButtons = [];
-	let selectingHandItem = {};
+	let selectingClass;
 	let selectingWinButton;
-	let selectingCityButtons = [];
 
 	const cutHand = async (i) => {
 		try {
@@ -33,7 +31,6 @@ const gameScene = (config = {
 				alert("リーチ後はツモ切りしかできません");
 			}
 			if (e.message === "ツモる牌がもうありません (終局)") {
-				isFinished = true;
 				$.deleteItem(selectButton);
 				$.deleteItem(reachButton);
 				$.deleteItem(handTrashArea);
@@ -97,7 +94,7 @@ const gameScene = (config = {
 	});
 
 	game.onUpdateHand = () => {
-		handItem.removeItems?.();
+		handItem?.removeItems?.();
 		handItem = new HandItem(game, {
 			drawSecond: ({hover, press}, tile) => {
 				if (config.showCityTable && hover && !(press && !IS_SMARTPHONE)) {
@@ -122,10 +119,9 @@ const gameScene = (config = {
 			}
 		})));
 		
-		if (isSelecting) {
-			selectedCities = [];
+		if (selectingClass) {
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
-			selectingHandItem.removeItems?.();
+			selectingHandItem?.removeItems?.();
 			selectingHandItem = new HandItem(game, {
 				zIndex: 101, // dialogより上
 				y: 130,
@@ -140,26 +136,19 @@ const gameScene = (config = {
 				}
 			});
 			
-			$.deleteItem(...selectingCityButtons);
-			selectingCityButtons = $.addItem(...calcCityOverlap(game.cities).map(({city, overlap}) => createSelectingHandButton(
-				city,
-				[
-					selectingHandItem.hand[city.position].path.rect[0] + 2.5,
-					270 + overlap * 105,
-					100 * city.length - 5,
-					100
-				],
+			selectingClass?.removeItems?.();
+			selectingClass = new SelectingCityClass(
+				game.cities,
+				selectingHandItem.hand.map(item => item.path.rect[0]),
 				latestTsumoPosition,
-				selectingCityButtons,
-				selectedCities,
 				config.restrictRule
-			)));
+			);
 		}
 	};
 	game.onUpdateHand();
 	
 	const selectingStart = () => {
-		isSelecting = true;
+		selectingClass = true;
 		$.addItem(new Dialog({
 			rect: [20, 20, 1560, 860],
 			draw: () => {
@@ -171,27 +160,29 @@ const gameScene = (config = {
 				}
 			},
 			onClose: () => {
-				isSelecting = false;
 				$.deleteItem(selectingWinButton);
-				$.deleteItem(...selectingCityButtons);
 				selectingHandItem.removeItems();
+				selectingClass.removeItems();
+				selectingClass = null;	// 選択中かどうかの判定に使うため: 暫定
 			}
 		}));
 		[selectingWinButton] = $.addItem(new Button({
 			zIndex: 101,
-			disabled: () => selectedCities.reduce((a, b) => a + b.length, 0) !== game.hand.length,
+			disabled: () => {
+				const selectedCities = selectingClass.buttons.filter(button => button.selected).map(button => button.city.name);
+				return selectedCities.reduce((a, b) => a + b.length, 0) !== game.hand.length;
+			},
 			rect: [1250, 780, 300, 80],
 			value: "面子を確定",
 			onClick: function() {
-				const cities = selectedCities.map(city_ => {
-					const { position, length, ...city } = city_;
+				const cities = selectingClass.buttons.filter(button => button.selected).map(button => button.city).map(city => {
 					const cityTiles = [];
-					for (let i = city_.position; i < city_.position + city_.length; i++) {
+					for (let i = city.position; i < city.position + city.length; i++) {
 						cityTiles.push(game.hand[i]);
 					}
 					return {...city, tiles: cityTiles};
-				});
-				for (let kan of game.kans) {
+				})
+				for (const kan of game.kans) {
 					const cityname = kan.reduce((a, b) => a + b.character, "");
 					cities.push({
 						...CITIES.filter(city => city.name === cityname)[0],
@@ -242,10 +233,10 @@ const gameScene = (config = {
 						5
 					],
 					radius: 2.5
-				}, "#f00");		
+				}, "#f00");
 			});
 		}
 	};
-
+	
 	$.update();
 };
