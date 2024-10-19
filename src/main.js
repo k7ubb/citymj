@@ -32,16 +32,15 @@ scoreScene(
 		handLength: 14,
 		showHandGuide: true,
 		showCityTable: true,
-		restrictRule: true,
+		strictRule: true,
 	}
 );
-*/
 gameScene(
 	{
 		handLength: 14,
 		showHandGuide: true,
 		showCityTable: true,
-		restrictRule: true,
+		strictRule: true,
 	},
 	[
 		{ character: "十", count: 4 },

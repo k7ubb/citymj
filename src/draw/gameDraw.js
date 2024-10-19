@@ -69,41 +69,21 @@ class SelectingCityClass {
 	}
 	
 	updateSelectedStatus() {
-		const selectedCities = this.buttons.filter(button => button.selected).map(button => button.city);
 		for (const button of this.buttons) {
 			button.disabled = false;
 			if (button.selected) { continue; }
-			// くっつき待ち制限
-			if ( this.restrictRule
-				&& button.city.length === 2
-				&& button.city.position <= this.latestTsumoPosition
-				&& this.latestTsumoPosition <= button.city.position + button.city.length - 1
-			) {
-				const waitedChar = button.city.name[1 - (this.latestTsumoPosition - button.city.position)];
-				const waitedCharTile = TILES.filter(tile => tile.character === waitedChar)[0];
-				if (waitedCharTile.count >= 10) {
-					button.disabled = true;
-					continue;
-				}
+			if (this.strictRule && isCityDisabledByStrictRule(button.city, this.latestTsumoPosition)) {
+				button.disabled = true;
 			}
-			for (const city of selectedCities) {
-				// 選択済みの市町村と共通の牌を使っていないか
-				if (button.city.position + button.city.length - 1 >= city.position && city.position + city.length - 1 >= button.city.position) {
-					button.disabled = true;
-					break;
-				}
-				// 同一の市町村がすでに存在しないか
-				if (button.city.name === city.name && button.city.category === city.category && button.city.pref === city.pref) {
-					button.disabled = true;
-					break;
-				}
+			if (isCityDisabledByOverlap(button.city, this.buttons.filter(button => button.selected).map(button => button.city))) {
+				button.disabled = true;
 			}
 		}
 	}
 
-	constructor(cities, handPosition, latestTsumoPosition, restrictRule) {
+	constructor(cities, handPosition, latestTsumoPosition, strictRule) {
 		this.latestTsumoPosition = latestTsumoPosition;
-		this.restrictRule = restrictRule;
+		this.strictRule = strictRule;
 		// 異なるthisを参照するため: 暫定
 		const thisClass = this;
 		this.buttons = $.addItem(...calcCityOverlap(cities.filter(city => city.length !== 4)).map(({city, overlap}) => ({
@@ -121,19 +101,13 @@ class SelectingCityClass {
 				radius: 20
 			},
 			draw: function() {
-				$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingHandButtonFillColor(city.category, restrictRule));
+				$.ctx.bbFill(this.path, this.disabled? "#ccc" : selectingButtonFillColor(city.category, strictRule));
 				if (this.selected) {
 					$.ctx.bbStroke(this.path, {color: COLOR_STRONG, width: 2});
 				}
 				const [x, y, w, h] = this.path.rect;
 				$.ctx.bbText(city.pref, x + w / 2, y + 10, {size: 30, align: "center"});
-				const description = [
-					city.category,
-					...(city.kento? ["都"] : []),
-					...(city.seirei? ["令"] : []),
-					...(city.ritou? ["島"] : [])
-				].join(" ");
-				$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
+				$.ctx.bbText(selectingCityDescription(city), x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingButtonTextColor(city.category), style: "bold"});
 			},
 			onClick: function() {
 				this.selected = !this.selected;
@@ -196,35 +170,6 @@ const drawKan = (kans) => {
 	}
 };
 
-const calcCityOverlap = (cities, skipSameNameCity = false) => {
-	const maxTile = Math.max(...cities.map(city => city.position + city.length));
-	const count = Array(maxTile).fill().map(() => []);
-	const result = [];
-	let lastPos;
-	let lastCities;
-	for (let city of cities) {
-		if (lastPos !== city.position) {
-			lastPos = city.position;
-			lastCities = [];
-		}
-		if (lastCities.includes(city.name)) {
-			if (skipSameNameCity) { continue; }
-		}	else {
-			lastCities.push(city.name);
-		}
-		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
-		let line = 0; while(set.includes(line)) { line++; }
-		for (let i = 0; i < city.length; i++) {
-			count[city.position + i].push(line);
-		}
-		result.push({
-			city,
-			overlap: line
-		});
-	}
-	return result;
-};
-
 const drawCityTable = (hand, character) => {
 	const RECT_Y = 25;
 	const TEXT_SIZE = 39;
@@ -237,27 +182,5 @@ const drawCityTable = (hand, character) => {
 	for (let i = 0; i < cities.length; i++) {
 		const isInHand = cities[i].name.split("").map(char => hand.map(tile => tile.character).includes(char)).reduce((a, b) => a && b, true);
 		$.ctx.bbText(cities[i].name + cities[i].category, start_x + Math.floor(i / TEXT_LINES) * TEXT_SIZE * ROW_WIDTH, RECT_Y + TEXT_SIZE * 1.5 * (i % TEXT_LINES), {size: TEXT_SIZE, style: isInHand? "bold" : ""});
-	}
-};
-
-const selectingHandButtonFillColor = (category) => {
-	switch (category) {
-		case "市":
-			return "#9DCCDF";
-		case "町":
-			return "#CC9DDF";
-		case "村":
-			return "#CCDF9D";
-	}
-};
-
-const selectingHandButtonTextColor = (category) => {
-	switch (category) {
-		case "市":
-			return "#000080";
-		case "町":
-			return "#800000";
-		case "村":
-			return "#008000";
 	}
 };
