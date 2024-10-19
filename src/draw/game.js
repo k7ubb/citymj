@@ -106,7 +106,7 @@ class SelectingCityClass {
 		this.restrictRule = restrictRule;
 		// 異なるthisを参照するため: 暫定
 		const thisClass = this;
-		this.buttons = $.addItem(...calcCityOverlap(cities).map(({city, overlap}) => ({
+		this.buttons = $.addItem(...calcCityOverlap(cities.filter(city => city.length !== 4)).map(({city, overlap}) => ({
 			// 本当は, selectedとcityはitem内に持たせたくない…
 			selected: false,
 			city,
