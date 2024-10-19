@@ -35,6 +35,7 @@ scoreScene(
 		restrictRule: true,
 	}
 );
+*/
 gameScene(
 	{
 		handLength: 14,
@@ -54,8 +55,8 @@ gameScene(
 		{ character: "川", count: 61 },
 		{ character: "大", count: 41 },
 		{ character: "川", count: 61 },
-		{ character: "新", count: 11 },
-		{ character: "城", count: 16 },
+		{ character: "上", count: 25 },
+		{ character: "松", count: 23 },
 		{ character: "坂", count: 9 },
 		{ character: "郷", count: 11 },
 		{ character: "島", count: 39 },
@@ -67,6 +68,8 @@ gameScene(
 		{ character: "南", count: 30 },
 		{ character: "野", count: 38 },
 		{ character: "野", count: 38 },
+		{ character: "生", count: 6 },
+		{ character: "川", count: 61 },
 		{ character: "東", count: 27 },
 		{ character: "川", count: 61 },
 		{ character: "島", count: 39 },
@@ -141,7 +144,6 @@ gameScene(
 		{ character: "根", count: 7 },
 		{ character: "前", count: 6 },
 		{ character: "部", count: 6 },
-		{ character: "生", count: 6 },
 		{ character: "波", count: 6 },
 		{ character: "府", count: 6 },
 		{ character: "沢", count: 6 },
