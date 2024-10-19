@@ -1,22 +1,3 @@
-const getCitiesInHand = (hand) => {
-	const cities = [];
-	for (let i = 0; i < hand.length; i++) {
-		for (const city of CITIES) {
-			for (let k = 0; k < city.name.length; k++) {
-				if (hand[i + k]?.character !== city.name[k]) { break; }
-				if (k === city.name.length - 1) {
-					cities.push({
-						...city,
-						position: i,
-						length: city.name.length
-					});
-				}
-			}
-		}
-	}
-	return cities;
-};
-
 const findYaku = ({
 	count,	// あがった順目 (天和: 0)
 	dora,

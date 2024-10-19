@@ -5,10 +5,10 @@ const scoreScene = (game, cities, config) => {
 	
 	$.draw = () => {
 		$.ctx.bbFill({rect: [0, 0, 1600, 900]}, COLOR_BACKGROUND);
-		drawCityHands(cities);
-		drawCityNames(cities);
-		drawYaku(yaku, showCount);
-		drawDora2(game.dora, game.uradora, game.kans.length + 1, game.reachCount !== -1);
+		drawScoreHands(cities);
+		drawScoreCityNames(cities);
+		drawScoreYaku(yaku, showCount);
+		drawScoreDora(game.dora, game.uradora, game.kans.length + 1, game.reachCount !== -1);
 		if (showCount === yaku.length) {
 			$.ctx.bbText(`${score.text}`, 500, 800, {size: 40});
 			$.ctx.bbText(`${score.point}点`, 700, 760, {size: 80, color: score.isYakuman? "#f00" : COLOR_STRONG});
@@ -95,53 +95,3 @@ const scoreScene = (game, cities, config) => {
 	};
 	increment();
 };
-
-const drawCityHands = (cities) => {
-	const HAND_W = 80;
-	const GAP = 10;
-	const tile_length = cities.reduce((a, b) => a + b.tiles.length, 0);
-	const start_x = (1600 - HAND_W * tile_length - GAP * (cities.length - 1)) / 2;
-	
-	let nth_tile = 0;
-	for (let i = 0; i < cities.length; i++) {
-		for (let j = 0; j < cities[i].tiles.length; j++) {
-			drawTile([
-				start_x + HAND_W * nth_tile + GAP * i,
-				50,
-				HAND_W,
-			], cities[i].tiles[j]);
-			nth_tile++;
-		}
-	}
-};
-
-const drawCityNames = (cities) => {
-	const NAME_X = 100;
-	const NAME_Y = 200;
-	const NAME_SIZE = 40;
-	for (let i = 0; i < cities.length; i++) {
-		$.ctx.bbText(`${cities[i].pref}${cities[i].name}${cities[i].category}`, NAME_X, NAME_Y + i * (NAME_SIZE * 1.5), {size: NAME_SIZE});
-	}
-};
-
-const drawYaku = (yaku, count) => {
-	const YAKU_X = 500;
-	const YAKU_Y = 200;
-	const YAKU_SIZE = 40;
-	for (let i = 0; i < count; i++) {
-		$.ctx.bbText(yaku[i].point, YAKU_X, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-		$.ctx.bbText(`${yaku[i].name}`, YAKU_X + 150, YAKU_Y + i * (YAKU_SIZE * 1.5), {size: YAKU_SIZE});
-	}
-};
-
-const drawDora2 = (dora, uradora, doraCount, isReached) => {
-	for (let i = 0; i < 5; i++) {
-		if (!isReached && 0) {
-			drawTile([1200 + 60 * i, 220, 59], uradora[i].tile, {perspective: "ura"});
-		} else {
-			drawTile([1200 + 60 * i, 300, 59], uradora[i].tile, {perspective: i < doraCount? "down" : "ura"});
-		}
-		drawTile([1200 + 60 * i, 200, 59], dora[i].tile, {perspective: i < doraCount? "down" : "ura"});
-	}
-};
-
