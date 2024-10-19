@@ -134,9 +134,6 @@ class SelectingCityClass {
 					...(city.ritou? ["島"] : [])
 				].join(" ");
 				$.ctx.bbText(description, x + 10, y + h / 2, {size: 30, color: this.disabled? "#999" : selectingHandButtonTextColor(city.category), style: "bold"});
-				if (this.disabled) {
-					$.ctx.bbText("⚠️", x + 10, y + 10, {size: 30, color: "#f00"});
-				}
 			},
 			onClick: function() {
 				this.selected = !this.selected;
