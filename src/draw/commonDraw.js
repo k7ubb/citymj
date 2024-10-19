@@ -176,17 +176,3 @@ const drawCheckbox = (x, y, isChecked) => {
 		]}, {color: "#f00", width: 4});
 	}
 };
-
-const drawCursor = (x, y, size) => {
-	const points = [
-		[0, 0],
-		[0, 15],
-		[4, 11],
-		[7, 17],
-		[8, 16],
-		[5, 10],
-		[10, 10]
-	].map(([x_, y_]) => [x + x_ * size, y + y_ * size]);
-	$.ctx.bbStroke({points}, {color: "#fff", width: 4});
-	$.ctx.bbFill({points}, "#000");
-};

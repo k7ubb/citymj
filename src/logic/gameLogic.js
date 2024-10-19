@@ -13,6 +13,8 @@ class Game {
 	isRinshan;
 	reachCount = -1;
 
+	onUpdateHand = () => {};
+
 	constructor(handLength, debugMauntain) {
 		this.mountain = debugMauntain ?? shuffle(structuredClone(TILES));
 		this.hand = new Array(handLength).fill().map(() => this.mountain.shift());
@@ -54,30 +56,110 @@ class Game {
 		this.updateCities();
 	}
 
-	onUpdateHand = () => {}
-
 	updateCities = () => {
-		this.cities = getCitiesInHand(this.hand);
-		this.onUpdateHand();
-	};
-	
-}
-
-const getCitiesInHand = (hand) => {
-	const cities = [];
-	for (let i = 0; i < hand.length; i++) {
-		for (const city of CITIES) {
-			for (let k = 0; k < city.name.length; k++) {
-				if (hand[i + k]?.character !== city.name[k]) { break; }
-				if (k === city.name.length - 1) {
-					cities.push({
-						...city,
-						position: i,
-						length: city.name.length
-					});
+		this.cities = [];
+		for (let i = 0; i <this.hand.length; i++) {
+			for (const city of CITIES) {
+				for (let k = 0; k < city.name.length; k++) {
+					if (this.hand[i + k]?.character !== city.name[k]) { break; }
+					if (k === city.name.length - 1) {
+						this.cities.push({
+							...city,
+							position: i,
+							length: city.name.length
+						});
+					}
 				}
 			}
 		}
+		this.onUpdateHand();
+	};	
+}
+
+const calcCityOverlap = (cities, skipSameNameCity = false) => {
+	const maxTile = Math.max(...cities.map(city => city.position + city.length));
+	const count = Array(maxTile).fill().map(() => []);
+	const result = [];
+	let lastPos;
+	let lastCities;
+	for (let city of cities) {
+		if (lastPos !== city.position) {
+			lastPos = city.position;
+			lastCities = [];
+		}
+		if (lastCities.includes(city.name)) {
+			if (skipSameNameCity) { continue; }
+		}	else {
+			lastCities.push(city.name);
+		}
+		const set = count.slice(city.position, city.position + city.length).reduce((a, b) =>[...a, ...b], []);
+		let line = 0; while(set.includes(line)) { line++; }
+		for (let i = 0; i < city.length; i++) {
+			count[city.position + i].push(line);
+		}
+		result.push({
+			city,
+			overlap: line
+		});
 	}
-	return cities;
+	return result;
+};
+
+const isCityDisabledByStrictRule = (city, latestTsumoPosition) => {
+	if (city.length === 2
+		&& city.position <= latestTsumoPosition
+		&& latestTsumoPosition <= city.position + city.length - 1
+	) {
+		const waitingChar = city.name[1 - (latestTsumoPosition - city.position)];
+		const waitingTile = TILES.filter(tile => tile.character === waitingChar)[0];
+		if (waitingTile.count >= 10) {
+			return true;
+		}
+	}
+	return false;
+};
+
+const isCityDisabledByOverlap = (city, selectedCities) => {
+	for (const city_ of selectedCities) {
+		// 選択済みの市町村と共通の牌を使っていないか
+		if (city.position + city.length - 1 >= city_.position && city_.position + city_.length - 1 >= city.position) {
+			return true;
+		}
+		// 同一の市町村がすでに存在しないか
+		if (city.name === city_.name && city.category === city_.category && city.pref === city_.pref) {
+			return true;
+		}
+	}
+	return false;
+};
+
+const selectingCityDescription = (city) => {
+	return [
+		city.category,
+		...(city.kento? ["都"] : []),
+		...(city.seirei? ["令"] : []),
+		...(city.ritou? ["島"] : [])
+	].join(" ");
+};
+
+const selectingButtonFillColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#9DCCDF";
+		case "町":
+			return "#CC9DDF";
+		case "村":
+			return "#CCDF9D";
+	}
+};
+
+const selectingButtonTextColor = (category) => {
+	switch (category) {
+		case "市":
+			return "#000080";
+		case "町":
+			return "#800000";
+		case "村":
+			return "#008000";
+	}
 };

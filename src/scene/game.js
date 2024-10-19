@@ -4,7 +4,7 @@ const gameScene = (config = {
 	handLength: 14,
 	showHandGuide: true,
 	showCityTable: true,
-	restrictRule: false,
+	strictRule: false,
 }, debugMauntain) => {
 	$.reset();
 
@@ -13,6 +13,7 @@ const gameScene = (config = {
 	let handItem;
 	let selectingHandItem;
 	let kanButtons = [];
+	let isSelecting = false;
 	let selectingClass;
 	let selectingWinButton;
 
@@ -88,8 +89,9 @@ const gameScene = (config = {
 			}
 		},
 		onDrop: (from) => {
-			const handIndex = handItem.hand.indexOf(from);
-			if (handIndex !== -1) { cutHand(handIndex); }
+			if (handItem.hand.includes(from)) {
+				cutHand(handItem.hand.indexOf(from));
+			}
 		}
 	});
 
@@ -119,7 +121,7 @@ const gameScene = (config = {
 			}
 		})));
 		
-		if (selectingClass) {
+		if (isSelecting) {
 			const latestTsumoPosition = game.hand.indexOf(game.latestTsumo);
 			selectingHandItem?.removeItems?.();
 			selectingHandItem = new HandItem(game, {
@@ -141,14 +143,14 @@ const gameScene = (config = {
 				game.cities,
 				selectingHandItem.hand.map(item => item.path.rect[0]),
 				latestTsumoPosition,
-				config.restrictRule
+				config.strictRule
 			);
 		}
 	};
 	game.onUpdateHand();
 	
 	const selectingStart = () => {
-		selectingClass = true;
+		isSelecting = true;
 		$.addItem(new Dialog({
 			rect: [20, 20, 1560, 860],
 			draw: () => {
@@ -163,7 +165,7 @@ const gameScene = (config = {
 				$.deleteItem(selectingWinButton);
 				selectingHandItem.removeItems();
 				selectingClass.removeItems();
-				selectingClass = null;	// 選択中かどうかの判定に使うため: 暫定
+				isSelecting = false;
 			}
 		}));
 		[selectingWinButton] = $.addItem(new Button({
@@ -220,7 +222,7 @@ const gameScene = (config = {
 		drawDora(game.dora, game.uradora, game.kans.length + 1);
 		drawTrash(game.trash, game.reachCount);
 		drawKan(game.kans);
-		if (config.restrictRule) {
+		if (config.strictRule) {
 			$.ctx.bbText("⚠️くっつき待ち制限: ON", 1556, 20, {size: 30, align: "right"});
 		}
 		if (config.showHandGuide) {
