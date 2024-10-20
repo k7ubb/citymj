@@ -625,7 +625,7 @@ const CITIES = [
 	{"name": "高松", "category": "市", "pref": "香川県", "kento":true},
 	{"name": "三豊", "category": "市", "pref": "香川県"},
 	{"name": "三木", "category": "町", "pref": "香川県"},
-	{"name": "土庄", "category": "町", "pref": "香川県"},
+	{"name": "土庄", "category": "町", "pref": "香川県", "ritou":true},
 	{"name": "宇多津", "category": "町", "pref": "香川県"},
 	{"name": "松山", "category": "市", "pref": "愛媛県", "kento":true},
 	{"name": "宇和島", "category": "市", "pref": "愛媛県"},
