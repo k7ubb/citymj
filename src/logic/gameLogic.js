@@ -78,7 +78,6 @@ class Game {
 
 const calcCityOverlap = (cities, skipSameNameCity = false) => {
 	const maxTile = Math.max(0, ...cities.map(city => city.position + city.length));
-	console.log(maxTile)
 	const count = Array(maxTile).fill().map(() => []);
 	const result = [];
 	let lastPos;
