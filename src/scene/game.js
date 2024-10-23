@@ -78,7 +78,7 @@ const gameScene = (config = {
 	}));
 
 	const handTrashArea = $.addItem({
-		zIndex: 1,
+		zIndex: 0,
 		path: { rect: [400, 40, 800, 460] },
 		draw: function({drop}) {
 			if (drop && handItem.hand.includes(drop.from)) {

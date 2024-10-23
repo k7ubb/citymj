@@ -77,9 +77,12 @@ class ItemsCanvas {
 				if (this.isMousePress) {
 					if (mouseInPoint) { tasks[i].status.press = true; }
 					if (tasks[i].item.draggable && startInPoint && !mouseInPoint) { tasks[i].status.drag = true; from = tasks[i].item; }
-					if (!startInPoint && mouseInPoint) { tasks[i].status.drop = {from}; }
+					if (!startInPoint && mouseInPoint) { tasks[i].status.drop = true; }
 				}
 			}
+		}
+		for (let i = 0; i < tasks.length; i++) {
+			if (tasks[i].status.drop) { tasks[i].status.drop = {from}; }
 		}
 		for (let i = 0; i < tasks.length; i++) { if (tasks[i].item.draw) { tasks[i].item.draw(tasks[i].status); } }
 		for (let i = 0; i < tasks.length; i++) { if (tasks[i].item.drawSecond) { tasks[i].item.drawSecond(tasks[i].status); } }
@@ -131,7 +134,10 @@ class ItemsCanvas {
 						const mouseInPoint = this.isPointInPath(tasks[i].item.path, this.mouseX, this.mouseY);
 						if (startInPoint && mouseInPoint) { tasks[i].status.click = true; }
 						if (tasks[i].item.draggable && startInPoint && !mouseInPoint) { from = tasks[i].item; }
-						if (!startInPoint && mouseInPoint) { tasks[i].status.drop = {from}; }
+						if (!startInPoint && mouseInPoint) { tasks[i].status.drop = true; }
+					}
+					for (let i = 0; i < tasks.length; i++) {
+						if (tasks[i].status.drop) { tasks[i].status.drop = {from}; }
 					}
 					for (let i = startIndex; i < tasks.length; i++) {
 						if (tasks[i].status.click && tasks[i].item.onClick) { tasks[i].item.onClick(); }
