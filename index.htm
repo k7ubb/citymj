@@ -4,18 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="stylesheet" type="text/css" href="app.css">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.2.0/css/all.css">
 <script src="https://cdn.jsdelivr.net/gh/k7ubb/exact-canvas@main/exact-canvas.js"></script>
 <script src="src/lib/items.js"></script>
 <script src="src/lib/bbcanvas.js"></script>
+<style>
+html {
+	user-select: none; 
+	-webkit-user-select: none; 
+	-moz-user-select: none; 
+	-webkit-touch-callout: none;
+}
+#game {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #000;
+}
+</style>
 <title>市町村麻雀練習ツール</title>
 </head>
 
 <body>
 <div id="game"></div>
-<a href="../" class="open"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
 
 <script src="src/scene/menu.js"></script>
 <script src="src/scene/score.js"></script>

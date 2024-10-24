@@ -62,6 +62,14 @@ const menuScene = () => {
 		dialogDraw: menuShowCityTableInfoDraw
 	}));
 	
+	if (location.pathname.includes("app")) {
+		$.addItem(new Button({
+			rect: [1300, 10, 240, 60],
+			value: "ブラウザで開く",
+			onClick: () => open("../")
+		}));
+	}
+	
 	$.draw = () => {
 		$.ctx.bbFill({rect: [0, 0, 1600, 900]}, COLOR_BACKGROUND);
 		$.ctx.bbText("市町村麻雀", 800, 80, {size: 200, align: "center", baseline: "top", style: "bold", color: COLOR_STRONG});
